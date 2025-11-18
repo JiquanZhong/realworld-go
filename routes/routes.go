@@ -1,0 +1,35 @@
+package routes
+
+import (
+	"github.com/JiquanZhong/realworld-go/handlers"
+	"github.com/JiquanZhong/realworld-go/middleware"
+	"github.com/gin-gonic/gin"
+)
+
+func SetupRoutes(r *gin.Engine) {
+	v1 := r.Group("/api/v1")
+	{
+
+		users := v1.Group("/users")
+		{
+			users.POST("/login", handlers.Login)
+			users.POST("", handlers.CreateUser)
+			users.GET("", handlers.GetUsers)
+		}
+
+		// 需要认证的路由
+		protected := v1.Group("/")
+		protected.Use(middleware.JWTAuth())
+		{
+			users := protected.Group("/users")
+
+			users.GET("/:id", handlers.GetUser)
+			users.PUT("/:id", handlers.UpdateUser)
+			users.DELETE("/:id", handlers.DeleteUser)
+		}
+	}
+
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
+	})
+}
