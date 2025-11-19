@@ -7,6 +7,9 @@ import (
 )
 
 func SetupRoutes(r *gin.Engine) {
+	// 添加日志中间件
+	r.Use(middleware.ZapLogger())
+
 	v1 := r.Group("/api/v1")
 	{
 
