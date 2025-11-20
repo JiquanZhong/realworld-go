@@ -20,7 +20,7 @@ func ZapLogger() gin.HandlerFunc {
 		duration := time.Since(startTime)
 
 		// 记录日志
-		utils.Logger.Info(
+		utils.Logger.Debug(
 			"HTTP Request",
 			zap.String("method", c.Request.Method),
 			zap.String("path", c.Request.URL.Path),

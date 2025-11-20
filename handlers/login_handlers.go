@@ -10,15 +10,27 @@ import (
 )
 
 type LoginRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required"`
+	Email    string `json:"email" binding:"required,email" example:"user@example.com"`
+	Password string `json:"password" binding:"required" example:"password123"`
 }
 
 type LoginResponse struct {
-	Token string              `json:"token"`
+	Token string              `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
 	User  models.UserResponse `json:"user"`
 }
 
+// Login godoc
+// @Summary User login
+// @Description Authenticate user with email and password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body LoginRequest true "Login credentials"
+// @Success 200 {object} LoginResponse "Successfully logged in"
+// @Failure 400 {object} utils.Response "Invalid request body"
+// @Failure 401 {object} utils.Response "Invalid email or password"
+// @Failure 500 {object} utils.Response "Failed to generate token"
+// @Router /users/login [post]
 func Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
