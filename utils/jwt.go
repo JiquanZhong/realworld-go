@@ -11,7 +11,7 @@ var jwtSecret = []byte("your_secret_key")
 
 type Claims struct {
 	UserID uint   `json:"user_id"`
-	name   string `json:"name"`
+	Name   string `json:"name"`
 	Email  string `json:"email"`
 	Role   string `json:"role"`
 	jwt.StandardClaims
@@ -20,7 +20,7 @@ type Claims struct {
 func GenerateToken(userId uint, name, email, role string) (string, error) {
 	claims := Claims{
 		UserID: userId,
-		name:   name,
+		Name:   name,
 		Email:  email,
 		Role:   role,
 		StandardClaims: jwt.StandardClaims{
