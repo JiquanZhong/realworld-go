@@ -57,12 +57,12 @@ type LoginResponse struct {
 
 func (s *userService) CreateUser(req CreateUserRequest) (models.UserResponse, error) {
 	user := models.User{
-		Email:    req.Email,
-		Password: req.Password,
-		Name:     req.Name,
-		Age:      req.Age,
-		Role:     models.RoleUser,
+		Email: req.Email,
+		Name:  req.Name,
+		Age:   req.Age,
+		Role:  models.RoleUser,
 	}
+	user.SetPassword(req.Password)
 
 	if err := db.GetDB().Create(&user).Error; err != nil {
 		return models.UserResponse{}, err
