@@ -1,10 +1,13 @@
 package main
 
 import (
+	"log"
+
 	"github.com/JiquanZhong/realworld-go/db"
 	"github.com/JiquanZhong/realworld-go/routes"
 	"github.com/JiquanZhong/realworld-go/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 
 	// 导入生成的docs包
@@ -36,6 +39,12 @@ import (
 // @name Authorization
 // @description Type "Bearer" followed by a space and JWT token.
 func main() {
+	// 加载环境变量
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	// 初始化日志系统
 	utils.InitLogger()
 	defer utils.Logger.Sync()

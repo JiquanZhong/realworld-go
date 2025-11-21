@@ -4,8 +4,10 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/JiquanZhong/realworld-go/utils"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 var jwtSecret = []byte("your_secret_key")
@@ -15,14 +17,16 @@ func JWTAuth() gin.HandlerFunc {
 		// Implement JWT authentication logic here
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			c.JSON(401, gin.H{"error": "Authorization header is missing"})
+			utils.GetLogger().Error("Authorization header is missing")
+			utils.Error(c, http.StatusUnauthorized, "Authorization header is missing")
 			c.Abort()
 			return
 		}
 
 		parts := strings.SplitN(authHeader, " ", 2)
 		if len(parts) != 2 || parts[0] != "Bearer" {
-			c.JSON(401, gin.H{"error": "Invalid Authorization header format"})
+			utils.GetLogger().Error("Invalid Authorization header format")
+			utils.Error(c, http.StatusUnauthorized, "Invalid Authorization header format")
 			c.Abort()
 			return
 		}
@@ -33,13 +37,15 @@ func JWTAuth() gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			utils.GetLogger().Error("Invalid token", zap.Error(err))
+			utils.Error(c, http.StatusUnauthorized, "Invalid token")
 			c.Abort()
 			return
 		}
 
 		if err != nil || !token.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			utils.GetLogger().Error("Invalid token", zap.Error(err))
+			utils.Error(c, http.StatusUnauthorized, "Invalid token")
 			c.Abort()
 			return
 		}

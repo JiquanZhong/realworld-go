@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"go.uber.org/zap"
 )
 
 var jwtSecret = []byte("your_secret_key")
@@ -30,6 +31,10 @@ func GenerateToken(userId uint, name, email, role string) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(jwtSecret)
+	if err != nil {
+		GetLogger().Error("Failed to generate token", zap.Error(err))
+		return "", err
+	}
 	return tokenString, err
 
 }

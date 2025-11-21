@@ -1,9 +1,12 @@
 package db
 
 import (
-	"log"
+	"os"
 
 	"github.com/JiquanZhong/realworld-go/models"
+	"github.com/JiquanZhong/realworld-go/utils"
+	"go.uber.org/zap"
+	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -14,22 +17,47 @@ var DB *gorm.DB
 func InitDB() {
 	var err error
 
-	DB, err = gorm.Open(sqlite.Open(("app.db")), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Warn),
-	})
+	driver := os.Getenv("DB_DRIVER")
+	if driver == "" {
+		driver = "sqlite"
+	}
+
+	switch driver {
+	case "postgres", "pg":
+		dsn := os.Getenv("DB_DSN")
+		if dsn == "" {
+			utils.Logger.Fatal("DB_DSN is not set")
+		}
+		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+			Logger: logger.Default.LogMode(logger.Warn),
+		})
+	default:
+		DB, err = gorm.Open(sqlite.Open(("app.db")), &gorm.Config{
+			Logger: logger.Default.LogMode(logger.Warn),
+		})
+	}
 
 	if err != nil {
-		log.Fatal("failed to connect database: ", err)
+		utils.Logger.Fatal("failed to connect database: ", zap.Error(err))
 	}
 
-	log.Println("database connection established")
+	utils.Logger.Info("database connection established")
 
 	// Migrate the schema
-	if err := DB.AutoMigrate(&models.User{}); err != nil {
-		log.Fatal("failed to migrate database: ", err)
+	if err := DB.AutoMigrate(
+		&models.User{},
+		&models.McpService{},
+		&models.McpTag{},
+		&models.MCPServiceTag{},
+		&models.McpRating{},
+		&models.McpFavorite{},
+		&models.McpInstallation{},
+		&models.McpToken{},
+	); err != nil {
+		utils.Logger.Fatal("failed to migrate database: ", zap.Error(err))
 	}
 
-	log.Println("database migrated successfully")
+	utils.Logger.Info("database migrated successfully")
 
 	// 创建默认管理员账号
 	createDefaultAdmin()
@@ -51,19 +79,19 @@ func createDefaultAdmin() {
 
 		// 设置默认密码: admin123
 		if err := admin.SetPassword("Diit@123"); err != nil {
-			log.Printf("Warning: failed to create default admin: %v", err)
+			utils.Logger.Warn("Warning: failed to create default admin: ", zap.Error(err))
 			return
 		}
 
 		if err := DB.Create(&admin).Error; err != nil {
-			log.Printf("Warning: failed to create default admin: %v", err)
+			utils.Logger.Warn("Warning: failed to create default admin: ", zap.Error(err))
 			return
 		}
 
-		log.Println("Default admin account created:")
-		log.Println("  Email: admin@diit.cn")
-		log.Println("  Password: Diit@123")
-		log.Println("  Please change the password after first login!")
+		utils.Logger.Info("Default admin account created:")
+		utils.Logger.Info("  Email: admin@diit.cn")
+		utils.Logger.Info("  Password: Diit@123")
+		utils.Logger.Info("  Please change the password after first login!")
 	}
 }
 
