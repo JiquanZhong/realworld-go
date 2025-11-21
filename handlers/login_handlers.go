@@ -50,7 +50,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	token, err := utils.GenerateToken(user.ID, user.Name, user.Email)
+	token, err := utils.GenerateToken(user.ID, user.Name, user.Email, user.Role)
 	if err != nil {
 		utils.Error(c, http.StatusInternalServerError, "Failed to generate token")
 		return

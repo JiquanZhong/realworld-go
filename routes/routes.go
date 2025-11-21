@@ -27,7 +27,6 @@ func SetupRoutes(r *gin.Engine) {
 		{
 			users.POST("/login", handlers.Login)
 			users.POST("", handlers.CreateUser)
-			users.GET("", handlers.GetUsers)
 		}
 
 		// 需要认证的路由
@@ -38,7 +37,17 @@ func SetupRoutes(r *gin.Engine) {
 
 			users.GET("/:id", handlers.GetUser)
 			users.PUT("/:id", handlers.UpdateUser)
-			users.DELETE("/:id", handlers.DeleteUser)
+		}
+
+		// 需要管理员权限的路由
+		admin := v1.Group("/")
+		admin.Use(middleware.JWTAuth(), middleware.RequireAdmin())
+		{
+			adminUsers := admin.Group("/users")
+
+			adminUsers.GET("", handlers.GetUsers)
+			adminUsers.DELETE("/:id", handlers.DeleteUser)
+			adminUsers.PUT("/:id/role", handlers.UpdateUserRole)
 		}
 	}
 

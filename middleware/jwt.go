@@ -46,6 +46,7 @@ func JWTAuth() gin.HandlerFunc {
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
 			c.Set("userID", claims["user_id"])
+			c.Set("role", claims["role"])
 		}
 
 		c.Next()

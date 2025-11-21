@@ -34,6 +34,9 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
+	// 设置默认角色为普通用户
+	user.Role = models.RoleUser
+
 	if err := db.GetDB().Create(&user).Error; err != nil {
 		utils.Error(c, http.StatusInternalServerError, err.Error())
 		return
@@ -159,4 +162,50 @@ func DeleteUser(c *gin.Context) {
 	}
 
 	utils.Success(c, gin.H{"message": "User deleted"})
+}
+
+type UpdateRoleRequest struct {
+	Role string `json:"role" binding:"required,oneof=admin user" example:"admin"`
+}
+
+// UpdateUserRole godoc
+// @Summary 修改用户角色
+// @Description 管理员修改用户角色（仅管理员可访问）
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param id path int true "用户ID"
+// @Param request body UpdateRoleRequest true "角色信息"
+// @Success 200 {object} utils.Response "返回更新后的用户数据 (models.UserResponse)"
+// @Failure 400 {object} utils.Response "请求参数错误"
+// @Failure 401 {object} utils.Response "未授权"
+// @Failure 403 {object} utils.Response "权限不足"
+// @Failure 404 {object} utils.Response "用户未找到"
+// @Failure 500 {object} utils.Response "服务器内部错误"
+// @Router /users/{id}/role [put]
+func UpdateUserRole(c *gin.Context) {
+	id := c.Param("id")
+	var user models.User
+
+	if err := db.GetDB().First(&user, id).Error; err != nil {
+		utils.Error(c, http.StatusNotFound, "User not found")
+		return
+	}
+
+	var req UpdateRoleRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// 更新用户角色
+	user.Role = req.Role
+
+	if err := db.GetDB().Save(&user).Error; err != nil {
+		utils.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.Success(c, user.ToResponse())
 }
