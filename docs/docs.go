@@ -373,7 +373,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.UpdateRoleRequest"
+                            "$ref": "#/definitions/services.UpdateUserRoleRequest"
                         }
                     }
                 ],
@@ -448,22 +448,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.UpdateRoleRequest": {
-            "type": "object",
-            "required": [
-                "role"
-            ],
-            "properties": {
-                "role": {
-                    "type": "string",
-                    "enum": [
-                        "admin",
-                        "user"
-                    ],
-                    "example": "admin"
-                }
-            }
-        },
         "models.User": {
             "type": "object"
         },
@@ -490,6 +474,22 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "services.UpdateUserRoleRequest": {
+            "type": "object",
+            "required": [
+                "role"
+            ],
+            "properties": {
+                "role": {
+                    "type": "string",
+                    "enum": [
+                        "admin",
+                        "user"
+                    ],
+                    "example": "admin"
                 }
             }
         },

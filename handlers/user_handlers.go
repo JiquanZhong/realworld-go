@@ -4,8 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/JiquanZhong/realworld-go/db"
-	"github.com/JiquanZhong/realworld-go/models"
+	"github.com/JiquanZhong/realworld-go/services"
 	"github.com/JiquanZhong/realworld-go/utils"
 	"github.com/gin-gonic/gin"
 )
@@ -22,27 +21,17 @@ import (
 // @Failure 500 {object} utils.Response "服务器内部错误"
 // @Router /users [post]
 func CreateUser(c *gin.Context) {
-	var user models.User
-
-	if err := c.ShouldBindJSON(&user); err != nil {
+	var req services.CreateUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	if err := user.SetPassword(user.Password); err != nil {
+	userResponse, err := services.Services().User.CreateUser(req)
+	if err != nil {
 		utils.Error(c, http.StatusInternalServerError, err.Error())
-		return
 	}
-
-	// 设置默认角色为普通用户
-	user.Role = models.RoleUser
-
-	if err := db.GetDB().Create(&user).Error; err != nil {
-		utils.Error(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	utils.Success(c, user.ToResponse())
+	utils.Success(c, userResponse)
 }
 
 // GetUsers godoc
@@ -58,26 +47,17 @@ func CreateUser(c *gin.Context) {
 // @Failure 500 {object} utils.Response "服务器内部错误"
 // @Router /users [get]
 func GetUsers(c *gin.Context) {
-	var users []models.User
 
 	page, _ := strconv.Atoi((c.DefaultQuery("page", "1")))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
-	offset := (page - 1) * pageSize
 
-	var total int64
-	db.GetDB().Model(&models.User{}).Count(&total)
-	db.GetDB().Offset(offset).Limit(pageSize).Find(&users)
-
-	var userResponses []models.UserResponse
-	for _, user := range users {
-		userResponses = append(userResponses, user.ToResponse())
+	pagination, err := services.Services().User.ListUsers(uint(page), uint(pageSize))
+	if err != nil {
+		utils.Error(c, http.StatusInternalServerError, err.Error())
+		return
 	}
+	utils.Success(c, pagination)
 
-	utils.Success(c, gin.H{
-		"total": total,
-		"page":  page,
-		"list":  userResponses,
-	})
 }
 
 // GetUser godoc
@@ -94,15 +74,19 @@ func GetUsers(c *gin.Context) {
 // @Failure 500 {object} utils.Response "服务器内部错误"
 // @Router /users/{id} [get]
 func GetUser(c *gin.Context) {
-	id := c.Param("id")
-	var user models.User
-
-	if err := db.GetDB().First(&user, id).Error; err != nil {
-		utils.Error(c, http.StatusNotFound, "User not found")
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		utils.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	utils.Success(c, user.ToResponse())
+	userResponse, err := services.Services().User.GetUser(uint(id))
+
+	if err != nil {
+		utils.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.Success(c, userResponse)
 }
 
 // UpdateUser godoc
@@ -121,24 +105,25 @@ func GetUser(c *gin.Context) {
 // @Failure 500 {object} utils.Response "服务器内部错误"
 // @Router /users/{id} [put]
 func UpdateUser(c *gin.Context) {
-	id := c.Param("id")
-	var user models.User
-
-	if err := db.GetDB().First(&user, id).Error; err != nil {
-		utils.Error(c, http.StatusNotFound, "User not found")
-		return
-	}
-
-	if err := c.ShouldBindJSON(&user); err != nil {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
 		utils.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	if err := db.GetDB().Save(&user).Error; err != nil {
+	var req services.UpdateUserRequest
+
+	if err = c.ShouldBindJSON(&req); err != nil {
+		utils.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	userResponse, err := services.Services().User.UpdateUser(id, req)
+	if err != nil {
 		utils.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	utils.Success(c, user.ToResponse())
+	utils.Success(c, userResponse)
 }
 
 // DeleteUser godoc
@@ -154,18 +139,19 @@ func UpdateUser(c *gin.Context) {
 // @Failure 500 {object} utils.Response "服务器内部错误"
 // @Router /users/{id} [delete]
 func DeleteUser(c *gin.Context) {
-	id := c.Param("id")
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		utils.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
 
-	if err := db.GetDB().Delete(&models.User{}, id).Error; err != nil {
+	err = services.Services().User.DeleteUser(uint(id))
+	if err != nil {
 		utils.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	utils.Success(c, gin.H{"message": "User deleted"})
-}
-
-type UpdateRoleRequest struct {
-	Role string `json:"role" binding:"required,oneof=admin user" example:"admin"`
+	utils.Success(c, "User deleted")
 }
 
 // UpdateUserRole godoc
@@ -176,7 +162,7 @@ type UpdateRoleRequest struct {
 // @Produce json
 // @Security Bearer
 // @Param id path int true "用户ID"
-// @Param request body UpdateRoleRequest true "角色信息"
+// @Param request body services.UpdateUserRoleRequest true "角色信息"
 // @Success 200 {object} utils.Response "返回更新后的用户数据 (models.UserResponse)"
 // @Failure 400 {object} utils.Response "请求参数错误"
 // @Failure 401 {object} utils.Response "未授权"
@@ -185,27 +171,22 @@ type UpdateRoleRequest struct {
 // @Failure 500 {object} utils.Response "服务器内部错误"
 // @Router /users/{id}/role [put]
 func UpdateUserRole(c *gin.Context) {
-	id := c.Param("id")
-	var user models.User
-
-	if err := db.GetDB().First(&user, id).Error; err != nil {
-		utils.Error(c, http.StatusNotFound, "User not found")
-		return
-	}
-
-	var req UpdateRoleRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
 		utils.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	// 更新用户角色
-	user.Role = req.Role
-
-	if err := db.GetDB().Save(&user).Error; err != nil {
-		utils.Error(c, http.StatusInternalServerError, err.Error())
+	var req services.UpdateUserRoleRequest
+	if err = c.ShouldBindJSON(&req); err != nil {
+		utils.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	utils.Success(c, user.ToResponse())
+	userResponse, err := services.Services().User.UpdateUserRole(uint(id), req)
+	if err != nil {
+		utils.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.Success(c, userResponse)
 }

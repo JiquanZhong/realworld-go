@@ -20,17 +20,6 @@ definitions:
       user:
         $ref: '#/definitions/models.UserResponse'
     type: object
-  handlers.UpdateRoleRequest:
-    properties:
-      role:
-        enum:
-        - admin
-        - user
-        example: admin
-        type: string
-    required:
-    - role
-    type: object
   models.User:
     type: object
   models.UserResponse:
@@ -49,6 +38,17 @@ definitions:
         type: string
       updated_at:
         type: string
+    type: object
+  services.UpdateUserRoleRequest:
+    properties:
+      role:
+        enum:
+        - admin
+        - user
+        example: admin
+        type: string
+    required:
+    - role
     type: object
   utils.Response:
     properties:
@@ -262,7 +262,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handlers.UpdateRoleRequest'
+          $ref: '#/definitions/services.UpdateUserRoleRequest'
       produces:
       - application/json
       responses:

@@ -371,7 +371,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.UpdateRoleRequest"
+                            "$ref": "#/definitions/services.UpdateUserRoleRequest"
                         }
                     }
                 ],
@@ -446,22 +446,6 @@
                 }
             }
         },
-        "handlers.UpdateRoleRequest": {
-            "type": "object",
-            "required": [
-                "role"
-            ],
-            "properties": {
-                "role": {
-                    "type": "string",
-                    "enum": [
-                        "admin",
-                        "user"
-                    ],
-                    "example": "admin"
-                }
-            }
-        },
         "models.User": {
             "type": "object"
         },
@@ -488,6 +472,22 @@
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "services.UpdateUserRoleRequest": {
+            "type": "object",
+            "required": [
+                "role"
+            ],
+            "properties": {
+                "role": {
+                    "type": "string",
+                    "enum": [
+                        "admin",
+                        "user"
+                    ],
+                    "example": "admin"
                 }
             }
         },

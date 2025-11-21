@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/JiquanZhong/realworld-go/db"
 	"github.com/JiquanZhong/realworld-go/models"
+	"github.com/JiquanZhong/realworld-go/services"
 	"github.com/JiquanZhong/realworld-go/utils"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -40,29 +40,12 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	var user models.User
-
-	if err := db.GetDB().Where("email = ?", req.Email).First(&user).Error; err != nil {
-		utils.GetLogger().Error("Invalid email or password", zap.Error(err))
-		utils.Error(c, http.StatusUnauthorized, "Invalid email or password")
-		return
-	}
-
-	if !user.CheckPassword(req.Password) {
-		utils.GetLogger().Error("Invalid email or password")
-		utils.Error(c, http.StatusUnauthorized, "Invalid email or password")
-		return
-	}
-
-	token, err := utils.GenerateToken(user.ID, user.Name, user.Email, user.Role)
+	loginResponse, err := services.Services().User.Login(req.Email, req.Password)
 	if err != nil {
-		utils.GetLogger().Error("Failed to generate token", zap.Error(err))
-		utils.Error(c, http.StatusInternalServerError, "Failed to generate token")
+		utils.GetLogger().Error("Failed to login", zap.Error(err))
+		utils.Error(c, http.StatusUnauthorized, "Invalid email or password")
 		return
 	}
 
-	c.JSON(http.StatusOK, LoginResponse{
-		Token: token,
-		User:  user.ToResponse(),
-	})
+	utils.Success(c, loginResponse)
 }

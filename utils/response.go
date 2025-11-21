@@ -1,6 +1,9 @@
 package utils
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+)
 
 type Response struct {
 	Code    int         `json:"code" example:"200"`
@@ -9,6 +12,7 @@ type Response struct {
 }
 
 func Success(c *gin.Context, data interface{}) {
+	GetLogger().Debug("Success", zap.Any("data", data))
 	c.JSON(200, Response{
 		Code:    200,
 		Message: "success",
@@ -17,6 +21,7 @@ func Success(c *gin.Context, data interface{}) {
 }
 
 func Error(c *gin.Context, code int, message string) {
+	GetLogger().Error(message)
 	c.JSON(code, Response{
 		Code:    code,
 		Message: message,
