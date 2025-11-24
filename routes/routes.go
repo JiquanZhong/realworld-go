@@ -29,6 +29,16 @@ func SetupRoutes(r *gin.Engine) {
 			users.POST("", handlers.CreateUser)
 		}
 
+		mcps := v1.Group("/mcps")
+		{
+			mcps.GET("", handlers.GetMcpServices)
+		}
+
+		mcpTags := v1.Group("/mcp-tags")
+		{
+			mcpTags.GET("", handlers.GetMcpTags)
+		}
+
 		// 需要认证的路由
 		protected := v1.Group("/")
 		protected.Use(middleware.JWTAuth())

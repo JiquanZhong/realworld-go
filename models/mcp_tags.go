@@ -11,6 +11,18 @@ type McpTag struct {
 	McpServices []McpService `gorm:"many2many:mcp_service_tags;foreignKey:ID;joinForeignKey:TagId;References:ID;joinReferences:McpId" json:"mcp_services,omitempty"`
 }
 
+type McpTagResponse struct {
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
+}
+
+func (mcpTag *McpTag) ToResponse() McpTagResponse {
+	return McpTagResponse{
+		ID:   mcpTag.ID,
+		Name: mcpTag.Name,
+	}
+}
+
 func (McpTag) TableName() string {
 	return "mcp_tags"
 }

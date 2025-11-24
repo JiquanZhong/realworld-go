@@ -10,7 +10,7 @@ import (
 
 type UserService interface {
 	CreateUser(req CreateUserRequest) (models.UserResponse, error)
-	ListUsers(page, pageSize uint) (Pagination, error)
+	ListUsers(page, pageSize uint) (utils.Pagination, error)
 	GetUser(id uint) (models.UserResponse, error)
 	UpdateUser(id int, req UpdateUserRequest) (models.UserResponse, error)
 	DeleteUser(id uint) error
@@ -43,13 +43,6 @@ type UpdateUserRoleRequest struct {
 	Role string `json:"role" binding:"required,oneof=admin user" example:"admin"`
 }
 
-type Pagination struct {
-	Total    uint                  `json:"total"`
-	Page     uint                  `json:"page"`
-	PageSize uint                  `json:"page_size"`
-	List     []models.UserResponse `json:"list"`
-}
-
 type LoginResponse struct {
 	Token string              `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
 	User  models.UserResponse `json:"user"`
@@ -70,7 +63,7 @@ func (s *userService) CreateUser(req CreateUserRequest) (models.UserResponse, er
 	return user.ToResponse(), nil
 }
 
-func (s *userService) ListUsers(page, pageSize uint) (Pagination, error) {
+func (s *userService) ListUsers(page, pageSize uint) (utils.Pagination, error) {
 	var users []models.User
 
 	offset := (page - 1) * pageSize
@@ -83,11 +76,11 @@ func (s *userService) ListUsers(page, pageSize uint) (Pagination, error) {
 	for _, user := range users {
 		userResponses = append(userResponses, user.ToResponse())
 	}
-	return Pagination{
+	return utils.Pagination{
 		Total:    uint(total),
 		Page:     page,
 		PageSize: pageSize,
-		List:     userResponses,
+		List:     &userResponses,
 	}, nil
 }
 

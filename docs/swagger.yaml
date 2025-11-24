@@ -74,6 +74,66 @@ info:
   title: 用户管理系统API
   version: "1.0"
 paths:
+  /mcp-tags:
+    get:
+      consumes:
+      - application/json
+      description: 分页获取 MCP 服务列表
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '返回分页结果: total, page, list([]models.McpTagResponse)'
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 获取 MCP 服务列表
+      tags:
+      - mcp-tags
+  /mcps:
+    get:
+      consumes:
+      - application/json
+      description: 分页获取 MCP 服务列表
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '返回分页结果: total, page, list([]models.McpResponse)'
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 获取 MCP 服务列表
+      tags:
+      - mcps
   /users:
     get:
       consumes:
