@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
@@ -37,4 +38,31 @@ func GenerateToken(userId uint, name, email, role string) (string, error) {
 	}
 	return tokenString, err
 
+}
+
+func GetUserID(c *gin.Context) (uint, bool) {
+	v, ok := c.Get("userID") // middleware/JWTAuth 中用的是 userID
+	if !ok {
+		return 0, false
+	}
+
+	switch id := v.(type) {
+	case float64: // JWT MapClaims 解码后常是 float64
+		return uint(id), true
+	case uint:
+		return id, true
+	case int:
+		return uint(id), true
+	default:
+		return 0, false
+	}
+}
+
+func GetUserRole(c *gin.Context) (string, bool) {
+	v, ok := c.Get("role")
+	if !ok {
+		return "", false
+	}
+	role, ok := v.(string)
+	return role, ok
 }

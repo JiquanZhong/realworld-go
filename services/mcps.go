@@ -4,12 +4,14 @@ import (
 	"github.com/JiquanZhong/realworld-go/db"
 	"github.com/JiquanZhong/realworld-go/models"
 	"github.com/JiquanZhong/realworld-go/utils"
+	"gorm.io/gorm"
 )
 
 type McpService interface {
-	// RegisterMcpService(req RegisterMcpServiceRequest) (models.McpService, error)
-	ListMcpServices(page, pageSize uint, listOptions ListOptions) (utils.Pagination, error)
-	// GetMcpService(id uint) (models.McpService, error)
+	ListMcpServices(page, pageSize uint, listOptions utils.ListOptions) (utils.Pagination, error)
+	RegisterMcpService(req RegisterMcpServiceRequest) (models.McpService, error)
+	GetMcpService(id uint) (models.McpService, error)
+	DeleteMcpService(id uint) error
 }
 
 type mcpService struct{}
@@ -18,17 +20,35 @@ func NewMcpService() McpService {
 	return &mcpService{}
 }
 
-type ListOptions struct {
+type RegisterMcpServiceRequest struct {
+	Name        string `json:"name" binding:"required"`
+	IconUrl     string `json:"icon_url"`
+	Description string `json:"description" binding:"required"`
+	Endpoint    string `json:"endpoint" binding:"required,url"`
+	JsonSchema  string `json:"json_schema"`
+	Category    string `json:"category"`
+	Tags        []uint `json:"tags"`
+	SubmitterID uint   `json:"submitter_id"`
 }
 
-func (s *mcpService) ListMcpServices(page, pageSize uint, listOptions ListOptions) (utils.Pagination, error) {
+func (s *mcpService) ListMcpServices(page, pageSize uint, listOptions utils.ListOptions) (utils.Pagination, error) {
 
 	var mcpServices []models.McpService
 
 	offset := (page - 1) * pageSize
+
+	dbQuery := db.GetDB().Model(&models.McpService{})
+	if listOptions.By != "" {
+		order := listOptions.By
+		if !listOptions.Asc {
+			order += " desc"
+		}
+		dbQuery = dbQuery.Order(order)
+	}
+
 	var total int64
 	db.GetDB().Model(&models.McpService{}).Count(&total)
-	err := db.GetDB().Preload("Tags").Offset(int(offset)).Limit(int(pageSize)).Find(&mcpServices).Error
+	err := dbQuery.Preload("Tags").Offset(int(offset)).Limit(int(pageSize)).Find(&mcpServices).Error
 	if err != nil {
 		return utils.Pagination{}, err
 	}
@@ -45,4 +65,57 @@ func (s *mcpService) ListMcpServices(page, pageSize uint, listOptions ListOption
 		List:     &mcpResponses,
 	}, nil
 
+}
+
+func (s *mcpService) RegisterMcpService(req RegisterMcpServiceRequest) (models.McpService, error) {
+	mcp := models.McpService{
+		Name:        req.Name,
+		IconUrl:     req.IconUrl,
+		Description: req.Description,
+		Endpoint:    req.Endpoint,
+		JsonSchema:  req.JsonSchema,
+		Category:    req.Category,
+		SubmitterID: req.SubmitterID,
+	}
+
+	err := db.GetDB().Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&mcp).Error; err != nil {
+			return err
+		}
+
+		if len(req.Tags) > 0 {
+			var tags []models.McpTag
+			if err := tx.Where("id IN ?", req.Tags).Find(tags).Error; err != nil {
+				return err
+			}
+
+			if err := tx.Model(&mcp).Association("Tags").Replace(tags); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return models.McpService{}, err
+	}
+
+	return s.GetMcpService(mcp.ID)
+}
+
+func (s *mcpService) GetMcpService(id uint) (models.McpService, error) {
+	var mcp models.McpService
+
+	if err := db.GetDB().Preload("Tags").First(&mcp, id).Error; err != nil {
+		return models.McpService{}, err
+	}
+	return mcp, nil
+}
+
+func (s *mcpService) DeleteMcpService(id uint) error {
+
+	if err := db.GetDB().Delete(&models.McpService{}, id).Error; err != nil {
+		return err
+	}
+	return nil
 }

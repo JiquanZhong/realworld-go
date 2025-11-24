@@ -51,11 +51,146 @@ const docTemplate = `{
                         "description": "每页数量",
                         "name": "page_size",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "id",
+                        "description": "排序字段",
+                        "name": "by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "是否升序",
+                        "name": "asc",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "返回分页结果: total, page, list([]models.McpTagResponse)",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "创建 MCP 标签",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mcp-tags"
+                ],
+                "summary": "创建 MCP 标签",
+                "parameters": [
+                    {
+                        "description": "创建 MCP 标签请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/services.McpTagRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回创建结果: id, name",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/mcp-tags/{id}": {
+            "put": {
+                "description": "更新 MCP 标签",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mcp-tags"
+                ],
+                "summary": "更新 MCP 标签",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "MCP 标签ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新 MCP 标签请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/services.McpTagRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回更新结果: id, name",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "删除 MCP 标签",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mcp-tags"
+                ],
+                "summary": "删除 MCP 标签",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "MCP 标签ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回删除结果: id, name",
                         "schema": {
                             "$ref": "#/definitions/utils.Response"
                         }
@@ -96,11 +231,149 @@ const docTemplate = `{
                         "description": "每页数量",
                         "name": "page_size",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "id",
+                        "description": "排序字段",
+                        "name": "by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "是否升序",
+                        "name": "asc",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "返回分页结果: total, page, list([]models.McpResponse)",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "注册一个新的 MCP 服务，并绑定标签",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mcps"
+                ],
+                "summary": "创建 MCP 服务",
+                "parameters": [
+                    {
+                        "description": "MCP 服务信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/services.RegisterMcpServiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回创建成功的 MCP 服务",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/mcps/{id}": {
+            "get": {
+                "description": "根据 ID 获取 MCP 服务信息（含标签）",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mcps"
+                ],
+                "summary": "获取 MCP 服务详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "MCP 服务 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回 MCP 服务详情",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "未找到 MCP 服务",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "根据 ID 删除 MCP 服务",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "mcps"
+                ],
+                "summary": "删除 MCP 服务",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "MCP 服务 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "未找到 MCP 服务",
                         "schema": {
                             "$ref": "#/definitions/utils.Response"
                         }
@@ -140,6 +413,20 @@ const docTemplate = `{
                         "default": 10,
                         "description": "每页数量",
                         "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "id",
+                        "description": "排序字段",
+                        "name": "by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "是否升序",
+                        "name": "asc",
                         "in": "query"
                     }
                 ],
@@ -564,6 +851,54 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "services.McpTagRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "services.RegisterMcpServiceRequest": {
+            "type": "object",
+            "required": [
+                "description",
+                "endpoint",
+                "name"
+            ],
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "endpoint": {
+                    "type": "string"
+                },
+                "icon_url": {
+                    "type": "string"
+                },
+                "json_schema": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "submitter_id": {
+                    "type": "integer"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },

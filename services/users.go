@@ -10,7 +10,7 @@ import (
 
 type UserService interface {
 	CreateUser(req CreateUserRequest) (models.UserResponse, error)
-	ListUsers(page, pageSize uint) (utils.Pagination, error)
+	ListUsers(page, pageSize uint, listOptions utils.ListOptions) (utils.Pagination, error)
 	GetUser(id uint) (models.UserResponse, error)
 	UpdateUser(id int, req UpdateUserRequest) (models.UserResponse, error)
 	DeleteUser(id uint) error
@@ -63,14 +63,24 @@ func (s *userService) CreateUser(req CreateUserRequest) (models.UserResponse, er
 	return user.ToResponse(), nil
 }
 
-func (s *userService) ListUsers(page, pageSize uint) (utils.Pagination, error) {
+func (s *userService) ListUsers(page, pageSize uint, listOptions utils.ListOptions) (utils.Pagination, error) {
 	var users []models.User
 
 	offset := (page - 1) * pageSize
-
+	dbQuery := db.GetDB().Model(&models.User{})
+	if listOptions.By != "" {
+		order := listOptions.By
+		if !listOptions.Asc {
+			order += " desc"
+		}
+		dbQuery = dbQuery.Order(order)
+	}
 	var total int64
 	db.GetDB().Model(&models.User{}).Count(&total)
-	db.GetDB().Offset(int(offset)).Limit(int(pageSize)).Find(&users)
+	err := dbQuery.Offset(int(offset)).Limit(int(pageSize)).Find(&users).Error
+	if err != nil {
+		return utils.Pagination{}, err
+	}
 
 	var userResponses []models.UserResponse
 	for _, user := range users {

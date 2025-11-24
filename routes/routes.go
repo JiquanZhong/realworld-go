@@ -32,6 +32,7 @@ func SetupRoutes(r *gin.Engine) {
 		mcps := v1.Group("/mcps")
 		{
 			mcps.GET("", handlers.GetMcpServices)
+			mcps.GET("/:id", handlers.GetMcpService)
 		}
 
 		mcpTags := v1.Group("/mcp-tags")
@@ -47,6 +48,10 @@ func SetupRoutes(r *gin.Engine) {
 
 			users.GET("/:id", handlers.GetUser)
 			users.PUT("/:id", handlers.UpdateUser)
+
+			mcps := protected.Group("/mcps")
+			mcps.POST("", handlers.RegisterMcpService)
+
 		}
 
 		// 需要管理员权限的路由
@@ -58,6 +63,16 @@ func SetupRoutes(r *gin.Engine) {
 			adminUsers.GET("", handlers.GetUsers)
 			adminUsers.DELETE("/:id", handlers.DeleteUser)
 			adminUsers.PUT("/:id/role", handlers.UpdateUserRole)
+
+			mcps := admin.Group("/mcps")
+			mcps.DELETE("/:id", handlers.DeleteMcpService)
+			
+
+
+			mcpTags := admin.Group("/mcp-tags")
+			mcpTags.POST("",handlers.CreateMcpTag)
+			mcpTags.DELETE("/:id", handlers.DeleteMcpTag)
+			mcpTags.PUT("/:id", handlers.UpdateMcpTag)
 		}
 	}
 

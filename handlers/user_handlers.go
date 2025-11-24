@@ -42,6 +42,8 @@ func CreateUser(c *gin.Context) {
 // @Produce json
 // @Param page query int false "页码" default(1)
 // @Param page_size query int false "每页数量" default(10)
+// @Param by query string false "排序字段" default(id)
+// @Param asc query bool false "是否升序" default(true)
 // @Success 200 {object} utils.Response "返回分页结果: total, page, list([]models.UserResponse)"
 // @Success 404 {object} utils.Response "没有权限访问"
 // @Failure 500 {object} utils.Response "服务器内部错误"
@@ -50,8 +52,12 @@ func GetUsers(c *gin.Context) {
 
 	page, _ := strconv.Atoi((c.DefaultQuery("page", "1")))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
+	listOptions := utils.ListOptions{
+		By:  c.DefaultQuery("by", "id"),
+		Asc: c.DefaultQuery("asc", "true") == "true",
+	}
 
-	pagination, err := services.Services().User.ListUsers(uint(page), uint(pageSize))
+	pagination, err := services.Services().User.ListUsers(uint(page), uint(pageSize), listOptions)
 	if err != nil {
 		utils.Error(c, http.StatusInternalServerError, err.Error())
 		return

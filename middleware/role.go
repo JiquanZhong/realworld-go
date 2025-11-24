@@ -3,6 +3,8 @@ package middleware
 import (
 	"net/http"
 
+	"github.com/JiquanZhong/realworld-go/cst"
+	"github.com/JiquanZhong/realworld-go/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,15 +14,13 @@ func RequireAdmin() gin.HandlerFunc {
 		// 从上下文中获取用户角色（由 JWTAuth 中间件设置）
 		role, exists := c.Get("role")
 		if !exists {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Role information not found"})
-			c.Abort()
+			utils.Error(c, http.StatusUnauthorized, "请先登录")
 			return
 		}
 
 		// 验证角色是否为管理员
-		if role != "admin" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Admin access required"})
-			c.Abort()
+		if role != cst.RoleAdmin {
+			utils.Error(c, http.StatusForbidden, "无权限")
 			return
 		}
 

@@ -12,7 +12,7 @@ type McpService struct {
 	IconUrl      string         `json:"icon_url"`
 	Description  string         `json:"description"`
 	Endpoint     string         `json:"endpoint" binding:"required,url"`
-	JsonSchema   string         `gorm:"type:text" json:"json_schema"`
+	JsonSchema   string         `gorm:"type:text" json:"-"`
 	Category     string         `json:"category"`
 	InstallCount uint           `json:"install_count"`
 	RatingAvg    float32        `json:"rating_avg"`

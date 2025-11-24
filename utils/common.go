@@ -6,3 +6,8 @@ type Pagination struct {
 	PageSize uint        `json:"page_size"`
 	List     interface{} `json:"list"`
 }
+
+type ListOptions struct {
+	By  string `json:"by"`
+	Asc bool   `json:"asc"`
+}
