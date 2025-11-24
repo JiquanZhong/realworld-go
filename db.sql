@@ -2,16 +2,17 @@ create table public.users
 (
     id         bigserial
         primary key,
-    name       text                      not null,
-    email      text                      not null
+    name       text                         not null,
+    email      text                         not null
         constraint uni_users_email
             unique,
     age        bigint,
-    password   text                      not null,
-    role       text default 'user'::text not null,
+    password   text                         not null,
+    role       text    default 'user'::text not null,
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
-    delete_at  timestamp with time zone
+    delete_at  timestamp with time zone,
+    icon_url   varchar default 'https://img.icons8.com/?size=100&id=20750&format=png&color=000000'::character varying
 );
 
 alter table public.users
