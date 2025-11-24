@@ -1,11 +1,21 @@
 <script setup>
 import { useMcpStore } from '@/stores/mcp'
-import { ref, watch } from 'vue'
+import { useUserStore } from '@/stores/user'
+import { ref, watch, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessageBox } from 'element-plus'
 
+const router = useRouter()
 const mcpStore = useMcpStore()
+const userStore = useUserStore()
 const searchText = ref('')
 
 let searchTimer = null
+
+// 初始化用户状态
+onMounted(() => {
+  userStore.init()
+})
 
 // 监听搜索文本变化，使用防抖执行搜索
 watch(searchText, (newValue) => {
@@ -16,6 +26,25 @@ watch(searchText, (newValue) => {
     mcpStore.search(newValue)
   }, 500) // 500ms 防抖延迟
 })
+
+// 处理登出
+const handleLogout = () => {
+  ElMessageBox.confirm('确定要退出登录吗？', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    userStore.logout()
+    router.push('/login')
+  }).catch(() => {
+    // 取消退出
+  })
+}
+
+// 跳转到登录页
+const goToLogin = () => {
+  router.push('/login')
+}
 </script>
 
 <template>
@@ -37,6 +66,37 @@ watch(searchText, (newValue) => {
               <el-icon><Search /></el-icon>
             </template>
           </el-input>
+
+          <!-- 用户信息区域 -->
+          <div v-if="userStore.isLoggedIn" class="user-section">
+            <el-dropdown @command="handleLogout">
+              <span class="user-info">
+                <el-avatar :size="32" style="background-color: #409EFF;">
+                  {{ userStore.username.charAt(0).toUpperCase() }}
+                </el-avatar>
+                <span class="username">{{ userStore.username }}</span>
+                <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+              </span>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item disabled>
+                    <div style="font-size: 12px; color: #909399;">
+                      {{ userStore.email }}
+                    </div>
+                  </el-dropdown-item>
+                  <el-dropdown-item divided command="logout">
+                    <el-icon><SwitchButton /></el-icon>
+                    退出登录
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div>
+
+          <!-- 未登录显示登录按钮 -->
+          <el-button v-else type="primary" @click="goToLogin">
+            登录
+          </el-button>
         </div>
       </div>
     </el-header>
@@ -59,11 +119,16 @@ watch(searchText, (newValue) => {
 }
 
 .app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   background: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   padding: 0 40px;
+  z-index: 1000;
 }
 
 .header-content {
@@ -85,10 +150,41 @@ watch(searchText, (newValue) => {
   color: #303133;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.user-section {
+  margin-left: 10px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 12px;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.user-info:hover {
+  background-color: #f5f7fa;
+}
+
+.username {
+  font-size: 14px;
+  color: #303133;
+  font-weight: 500;
+}
+
 .app-main {
   background: #f5f7fa;
   padding: 24px 40px;
-  min-height: calc(100vh - 120px);
+  padding-top: 84px;
+  min-height: calc(100vh - 60px);
 }
 
 .app-footer {
