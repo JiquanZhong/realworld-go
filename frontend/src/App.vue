@@ -71,7 +71,8 @@ const goToLogin = () => {
           <div v-if="userStore.isLoggedIn" class="user-section">
             <el-dropdown @command="handleLogout">
               <span class="user-info">
-                <el-avatar :size="32" style="background-color: #409EFF;">
+                <el-avatar v-if="userStore.iconUrl" :size="32" :src="userStore.iconUrl" />
+                <el-avatar v-else :size="32" style="background-color: #409EFF;">
                   {{ userStore.username.charAt(0).toUpperCase() }}
                 </el-avatar>
                 <span class="username">{{ userStore.username }}</span>

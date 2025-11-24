@@ -20,6 +20,7 @@ type User struct {
 	Age       uint           `json:"age" binding:"gte=0,lte=130"`
 	Password  string         `gorm:"not null" json:"password" binding:"required,min=6"`
 	Role      string         `gorm:"default:user;not null" json:"role"`
+	IconUrl   string         `gorm:"icon_url;not null;default:https://img.icons8.com/?size=100&id=20750&format=png&color=000000" json:"icon_url"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeleteAt  gorm.DeletedAt `gorm:"index" json:"delete_at"`
@@ -33,6 +34,7 @@ type UserResponse struct {
 	Role      string    `json:"role"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+	IconUrl   string    `json:"icon_url"`
 }
 
 func (u *User) ToResponse() UserResponse {
@@ -44,6 +46,7 @@ func (u *User) ToResponse() UserResponse {
 		Role:      u.Role,
 		CreatedAt: u.CreatedAt,
 		UpdatedAt: u.UpdatedAt,
+		IconUrl:   u.IconUrl,
 	}
 }
 
