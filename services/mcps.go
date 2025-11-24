@@ -8,7 +8,7 @@ import (
 )
 
 type McpService interface {
-	ListMcpServices(page, pageSize uint, listOptions utils.ListOptions) (utils.Pagination, error)
+	ListMcpServices(page, pageSize uint, listOptions utils.ListOptions, searchKeyword string) (utils.Pagination, error)
 	RegisterMcpService(req RegisterMcpServiceRequest) (models.McpService, error)
 	GetMcpService(id uint) (models.McpService, error)
 	DeleteMcpService(id uint) error
@@ -31,13 +31,21 @@ type RegisterMcpServiceRequest struct {
 	SubmitterID uint   `json:"submitter_id"`
 }
 
-func (s *mcpService) ListMcpServices(page, pageSize uint, listOptions utils.ListOptions) (utils.Pagination, error) {
+func (s *mcpService) ListMcpServices(page, pageSize uint, listOptions utils.ListOptions, searchKeyword string) (utils.Pagination, error) {
 
 	var mcpServices []models.McpService
 
 	offset := (page - 1) * pageSize
 
 	dbQuery := db.GetDB().Model(&models.McpService{})
+
+	// 添加搜索关键词过滤
+	if searchKeyword != "" {
+		searchPattern := "%" + searchKeyword + "%"
+		dbQuery = dbQuery.Where("name LIKE ? OR description LIKE ? OR category LIKE ?",
+			searchPattern, searchPattern, searchPattern)
+	}
+
 	if listOptions.By != "" {
 		order := listOptions.By
 		if !listOptions.Asc {
@@ -47,7 +55,15 @@ func (s *mcpService) ListMcpServices(page, pageSize uint, listOptions utils.List
 	}
 
 	var total int64
-	db.GetDB().Model(&models.McpService{}).Count(&total)
+	// 注意：计算总数时也要应用搜索条件
+	countQuery := db.GetDB().Model(&models.McpService{})
+	if searchKeyword != "" {
+		searchPattern := "%" + searchKeyword + "%"
+		countQuery = countQuery.Where("name LIKE ? OR description LIKE ? OR category LIKE ?",
+			searchPattern, searchPattern, searchPattern)
+	}
+	countQuery.Count(&total)
+
 	err := dbQuery.Preload("Tags").Offset(int(offset)).Limit(int(pageSize)).Find(&mcpServices).Error
 	if err != nil {
 		return utils.Pagination{}, err

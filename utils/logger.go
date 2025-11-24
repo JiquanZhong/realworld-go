@@ -27,26 +27,70 @@ func InitLogger() {
 		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
 
-	// 创建日志文件轮转器
-	fileWriter := &lumberjack.Logger{
-		Filename:   "logs/app.log", // 日志文件路径
-		MaxSize:    100,            // 单个日志文件最大大小 MB
-		MaxBackups: 10,             // 保留最多备份文件数
-		MaxAge:     30,             // 保留最多天数
-		Compress:   true,           // 是否压缩旧日志文件
+	// 创建不同级别的日志文件轮转器
+	debugWriter := &lumberjack.Logger{
+		Filename:   "logs/debug.log",
+		MaxSize:    100,
+		MaxBackups: 10,
+		MaxAge:     30,
+		Compress:   true,
 	}
 
-	// 定义多个输出目标：文件 + 控制台
+	infoWriter := &lumberjack.Logger{
+		Filename:   "logs/info.log",
+		MaxSize:    100,
+		MaxBackups: 10,
+		MaxAge:     30,
+		Compress:   true,
+	}
+
+	warnWriter := &lumberjack.Logger{
+		Filename:   "logs/warn.log",
+		MaxSize:    100,
+		MaxBackups: 10,
+		MaxAge:     30,
+		Compress:   true,
+	}
+
+	errorWriter := &lumberjack.Logger{
+		Filename:   "logs/error.log",
+		MaxSize:    100,
+		MaxBackups: 10,
+		MaxAge:     30,
+		Compress:   true,
+	}
+
 	encoder := zapcore.NewJSONEncoder(encoderConfig)
 
-	// 文件输出
-	fileCore := zapcore.NewCore(
+	// DEBUG 级别日志文件
+	debugCore := zapcore.NewCore(
 		encoder,
-		zapcore.AddSync(fileWriter),
-		zapcore.InfoLevel,
+		zapcore.AddSync(debugWriter),
+		zapcore.DebugLevel,
 	)
 
-	// 控制台输出（开发环境）
+	// INFO 级别日志文件（只记录 INFO 级别）
+	infoCore := zapcore.NewCore(
+		encoder,
+		zapcore.AddSync(infoWriter),
+		zap.NewAtomicLevelAt(zapcore.InfoLevel),
+	)
+
+	// WARN 级别日志文件（只记录 WARN 级别）
+	warnCore := zapcore.NewCore(
+		encoder,
+		zapcore.AddSync(warnWriter),
+		zap.NewAtomicLevelAt(zapcore.WarnLevel),
+	)
+
+	// ERROR 级别日志文件（记录 ERROR 和 FATAL）
+	errorCore := zapcore.NewCore(
+		encoder,
+		zapcore.AddSync(errorWriter),
+		zap.NewAtomicLevelAt(zapcore.ErrorLevel),
+	)
+
+	// 控制台输出（所有级别）
 	consoleEncoder := zapcore.NewConsoleEncoder(encoderConfig)
 	consoleCore := zapcore.NewCore(
 		consoleEncoder,
@@ -54,8 +98,8 @@ func InitLogger() {
 		zapcore.DebugLevel,
 	)
 
-	// 合并多个输出
-	core := zapcore.NewTee(fileCore, consoleCore)
+	// 合并所有输出
+	core := zapcore.NewTee(debugCore, infoCore, warnCore, errorCore, consoleCore)
 
 	// 创建 logger
 	Logger = zap.New(core, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))

@@ -11,7 +11,7 @@ import (
 
 // GetMcpServices godoc
 // @Summary 获取 MCP 服务列表
-// @Description 分页获取 MCP 服务列表
+// @Description 分页获取 MCP 服务列表，支持关键词搜索
 // @Tags mcps
 // @Accept json
 // @Produce json
@@ -19,18 +19,20 @@ import (
 // @Param page_size query int false "每页数量" default(10)
 // @Param by query string false "排序字段" default(id)
 // @Param asc query bool false "是否升序" default(true)
+// @Param search query string false "搜索关键词（匹配名称、描述、分类）"
 // @Success 200 {object} utils.Response "返回分页结果: total, page, list([]models.McpResponse)"
 // @Failure 500 {object} utils.Response "服务器内部错误"
 // @Router /mcps [get]
 func GetMcpServices(c *gin.Context) {
 	page, _ := strconv.Atoi((c.DefaultQuery("page", "1")))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
+	searchKeyword := c.Query("search")
 	listOptions := utils.ListOptions{
 		By:  c.DefaultQuery("by", "id"),
 		Asc: c.DefaultQuery("asc", "true") == "true",
 	}
 
-	pagination, err := services.Services().Mcp.ListMcpServices(uint(page), uint(pageSize), listOptions)
+	pagination, err := services.Services().Mcp.ListMcpServices(uint(page), uint(pageSize), listOptions, searchKeyword)
 
 	if err != nil {
 		utils.Error(c, http.StatusInternalServerError, err.Error())
