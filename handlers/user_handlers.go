@@ -30,6 +30,7 @@ func CreateUser(c *gin.Context) {
 	userResponse, err := services.Services().User.CreateUser(req)
 	if err != nil {
 		utils.Error(c, http.StatusInternalServerError, err.Error())
+		return
 	}
 	utils.Success(c, userResponse)
 }

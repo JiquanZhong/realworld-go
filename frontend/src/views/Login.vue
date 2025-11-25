@@ -74,7 +74,7 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { ElMessage } from 'element-plus'
+import { useFormValidation } from '@/composables/useFormValidation'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -91,16 +91,13 @@ const loginForm = reactive({
   password: ''
 })
 
+// 使用共享的表单验证规则
+const { emailRules, passwordRules } = useFormValidation()
+
 // 表单验证规则
 const loginRules = {
-  email: [
-    { required: true, message: '请输入邮箱地址', trigger: 'blur' },
-    { type: 'email', message: '请输入正确的邮箱地址', trigger: ['blur', 'change'] }
-  ],
-  password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
-  ]
+  email: emailRules,
+  password: passwordRules
 }
 
 // 处理登录
@@ -132,9 +129,7 @@ const handleLogin = async () => {
 
 // 跳转到注册页面
 const goToRegister = () => {
-  ElMessage.info('注册功能开发中...')
-  // TODO: 实现注册页面后取消注释
-  // router.push('/register')
+  router.push('/register')
 }
 
 // 返回到 MCP 广场
@@ -153,7 +148,6 @@ const goBack = () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
   padding: 20px;
 }
 
