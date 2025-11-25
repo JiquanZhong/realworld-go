@@ -243,6 +243,34 @@ const handleRegister = async () => {
   margin-top: 20px;
 }
 
+.el-form-item :deep(.el-input__wrapper) {
+  background: var(--mcp-dark-bg-card);
+  border: 1px solid var(--mcp-border);
+  box-shadow: none;
+  transition: border-color 0.2s ease;
+}
+
+.el-form-item :deep(.el-input__wrapper:hover) {
+  border-color: var(--mcp-border-light);
+}
+
+.el-form-item :deep(.el-input__wrapper.is-focus) {
+  border-color: var(--mcp-accent-cyan);
+}
+
+.el-form-item :deep(.el-input__inner) {
+  color: var(--mcp-text-primary);
+}
+
+.el-form-item :deep(.el-input__inner::placeholder) {
+  color: var(--mcp-text-muted);
+}
+
+.el-form-item :deep(.el-input__prefix),
+.el-form-item :deep(.el-input__suffix) {
+  color: var(--mcp-text-muted);
+}
+
 .register-button {
   width: 100%;
   margin-top: 10px;

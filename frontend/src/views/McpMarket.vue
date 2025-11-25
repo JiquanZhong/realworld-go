@@ -1,49 +1,27 @@
 <template>
   <div class="mcp-market">
     <div class="market-header">
-      <h1 class="page-title">探索MCP</h1>
-      <p class="page-subtitle">聚合优质MCP资源，拓展模型智能边界</p>
-    </div>
+      <div class="header-left">
+        <h1 class="page-title">探索MCP</h1>
+        <p class="page-subtitle">聚合优质MCP资源，拓展模型智能边界</p>
+      </div>
 
-    <div class="search-bar">
-      <el-input
-        v-model="searchInput"
-        placeholder="搜索"
-        class="search-input"
-        clearable
-      >
-        <template #prefix>
-          <el-icon><Search /></el-icon>
-        </template>
-      </el-input>
-    </div>
-
-    <div class="filter-section">
-      <div class="filter-row">
-        <el-select v-model="category" placeholder="分类" class="filter-select">
-          <el-option label="所有分类" value="" />
-          <el-option label="生产力" value="productivity" />
-          <el-option label="分析" value="analytics" />
-          <el-option label="沟通" value="communication" />
-        </el-select>
-
-        <el-select v-model="rating" placeholder="评分" class="filter-select">
-          <el-option label="所有评分" value="" />
-          <el-option label="5 星" value="5" />
-          <el-option label="4+星" value="4" />
-          <el-option label="3+星" value="3" />
-        </el-select>
-
-        <el-select v-model="price" placeholder="价格" class="filter-select">
-          <el-option label="所有价格" value="" />
-          <el-option label="免费" value="free" />
-          <el-option label="Paid" value="paid" />
-        </el-select>
+      <div class="header-controls">
+        <el-input
+          v-model="searchInput"
+          placeholder="搜索"
+          class="search-input"
+          clearable
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
 
         <el-select
           v-model="sortOption"
-          placeholder="Sort by"
-          class="filter-select"
+          placeholder="排序"
+          class="sort-select"
           @change="handleSortChange"
         >
           <el-option label="安装量最多" value="install_count_desc" />
@@ -56,18 +34,47 @@
       </div>
     </div>
 
-    <div v-loading="mcpStore.loading" class="content-section">
-      <div v-if="mcpStore.mcpList.length === 0 && !mcpStore.loading" class="empty-state">
-        <el-empty description="No MCPs found" />
-      </div>
+    <div v-loading="mcpStore.loading" class="content-layout">
+      <aside class="tag-sidebar">
+        <div class="sidebar-header">
+          <h3>标签</h3>
+          <p>选择一个标签探索相关 MCP</p>
+        </div>
+        <div class="tag-list">
+          <button
+            class="tag-item"
+            :class="{ active: !selectedTag }"
+            type="button"
+            @click="handleTagSelect(null)"
+          >
+            全部
+          </button>
+          <button
+            v-for="tag in mcpStore.tags"
+            :key="tag.id"
+            class="tag-item"
+            :class="{ active: selectedTag === tag.id }"
+            type="button"
+            @click="handleTagSelect(tag.id)"
+          >
+            {{ tag.name }}
+          </button>
+        </div>
+      </aside>
 
-      <div v-else class="mcp-grid">
-        <mcp-card
-          v-for="mcp in mcpStore.mcpList"
-          :key="mcp.id"
-          :mcp="mcp"
-          @click="handleMcpClick"
-        />
+      <div class="market-content">
+        <div v-if="filteredMcpList.length === 0 && !mcpStore.loading" class="empty-state">
+          <el-empty description="没找到符合条件的MCP" />
+        </div>
+
+        <div v-else class="mcp-grid">
+          <mcp-card
+            v-for="mcp in filteredMcpList"
+            :key="mcp.id"
+            :mcp="mcp"
+            @click="handleMcpClick"
+          />
+        </div>
       </div>
     </div>
 
@@ -87,7 +94,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMcpStore } from '@/stores/mcp'
 import { ElMessage } from 'element-plus'
@@ -99,13 +106,19 @@ const router = useRouter()
 const mcpStore = useMcpStore()
 const sortOption = ref('install_count_desc')
 const searchInput = ref('')
-const category = ref('')
-const rating = ref('')
-const price = ref('')
+const selectedTag = ref(null)
 let searchTimeout = null
+
+const filteredMcpList = computed(() => {
+  if (!selectedTag.value) return mcpStore.mcpList
+  return mcpStore.mcpList.filter((mcp) =>
+    (mcp.tags || []).some((tag) => tag.id === selectedTag.value)
+  )
+})
 
 onMounted(() => {
   loadData()
+  loadTags()
 })
 
 watch(searchInput, (newValue) => {
@@ -120,6 +133,14 @@ const loadData = async () => {
     await mcpStore.fetchMcpList()
   } catch (error) {
     ElMessage.error('Failed to load MCP list')
+  }
+}
+
+const loadTags = async () => {
+  try {
+    await mcpStore.fetchTags()
+  } catch (error) {
+    console.error('Failed to load tags', error)
   }
 }
 
@@ -138,6 +159,14 @@ const handlePageChange = (page) => {
 const handleMcpClick = (mcp) => {
   router.push(`/mcps/${mcp.id}`)
 }
+
+const handleTagSelect = (tagId) => {
+  if (selectedTag.value === tagId) {
+    selectedTag.value = null
+    return
+  }
+  selectedTag.value = tagId
+}
 </script>
 
 <style scoped>
@@ -148,8 +177,27 @@ const handleMcpClick = (mcp) => {
 }
 
 .market-header {
-  padding: 20px 16px;
+  padding: 0px 16px;
   margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.header-left {
+  flex: 1;
+  min-width: 260px;
+}
+
+.header-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 320px;
+  flex-wrap: wrap;
 }
 
 .page-title {
@@ -168,13 +216,9 @@ const handleMcpClick = (mcp) => {
   max-width: 720px;
 }
 
-.search-bar {
-  padding: 0 16px;
-  margin-bottom: 20px;
-}
-
 .search-input {
-  max-width: 600px;
+  width: 280px;
+  min-width: 200px;
 }
 
 .search-input :deep(.el-input__wrapper) {
@@ -203,65 +247,113 @@ const handleMcpClick = (mcp) => {
   color: var(--mcp-text-muted);
 }
 
-.filter-section {
-  padding: 0 16px;
-  margin-bottom: 32px;
+.sort-select {
+  width: 180px;
 }
 
-.filter-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.filter-select {
-  width: 160px;
-  color: red;
-}
-
-.filter-select :deep(.el-select__wrapper) {
-  background-color: var(--mcp-dark-bg-card) !important;
-  color: white !important;
-  font-size: 14px;
-}
-
-.filter-select :deep(.is-hovering) {
-  background-color: var(--mcp-dark-bg-card) !important;
-}
-
-.filter-select :deep(.el-input__wrapper) {
+.sort-select :deep(.el-input__wrapper) {
   background: var(--mcp-dark-bg-card) !important;
   border: 1px solid var(--mcp-border);
   box-shadow: none;
 }
 
-.filter-select :deep(.el-input__wrapper:hover) {
+.sort-select :deep(.el-input__wrapper:hover) {
   border-color: var(--mcp-border-light);
 }
 
-.filter-select :deep(.el-input__wrapper.is-focus) {
+.sort-select :deep(.el-input__wrapper.is-focus) {
   border-color: var(--mcp-accent-cyan);
 }
 
-.filter-select :deep(.el-input__inner) {
+.sort-select :deep(.el-select__wrapper) {
+  background: var(--mcp-dark-bg-card) !important;
+  border: 1px solid var(--mcp-border);
+  box-shadow: none;
+}
+
+.sort-select :deep(.el-select__wrapper:hover) {
+  border-color: var(--mcp-border-light);
+}
+
+.sort-select :deep(.el-select__wrapper.is-hovering),
+.sort-select :deep(.el-select__wrapper.is-focused) {
+  border-color: var(--mcp-accent-cyan);
+}
+
+.sort-select :deep(.el-input__inner) {
   color: var(--mcp-text-primary) !important;
 }
 
-.filter-select :deep(.el-input__inner::placeholder) {
-  color: var(--mcp-text-muted) !important;
-}
-
-.filter-select :deep(.el-select__placeholder) {
-  color: var(--mcp-text-muted) !important;
-}
-
-.filter-select :deep(.el-input__suffix) {
+.sort-select :deep(.el-input__suffix) {
   color: var(--mcp-text-muted);
 }
 
-.content-section {
-  min-height: 400px;
+.content-layout {
+  display: flex;
+  gap: 24px;
   padding: 0 16px;
+  min-height: 400px;
+}
+
+.tag-sidebar {
+  flex: 0 0 20%;
+  max-width: 240px;
+  background: var(--mcp-dark-bg-card);
+  border: 1px solid var(--mcp-border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  height: fit-content;
+  position: sticky;
+  top: 100px;
+}
+
+.sidebar-header {
+  margin-bottom: 16px;
+}
+
+.sidebar-header h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  color: var(--mcp-text-primary);
+}
+
+.sidebar-header p {
+  margin: 0;
+  color: var(--mcp-text-secondary);
+  font-size: 13px;
+}
+
+.tag-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tag-item {
+  background: transparent;
+  border: 1px solid var(--mcp-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  text-align: left;
+  color: var(--mcp-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 13px;
+}
+
+.tag-item:hover {
+  border-color: var(--mcp-border-light);
+  color: var(--mcp-text-primary);
+}
+
+.tag-item.active {
+  border-color: var(--mcp-accent-cyan);
+  color: var(--mcp-accent-cyan);
+  background: rgba(0, 212, 255, 0.08);
+}
+
+.market-content {
+  flex: 1;
 }
 
 .empty-state {
@@ -273,8 +365,8 @@ const handleMcpClick = (mcp) => {
 
 .mcp-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
   margin-bottom: 32px;
 }
 
@@ -327,6 +419,18 @@ const handleMcpClick = (mcp) => {
   border-color: var(--mcp-border);
 }
 
+@media (max-width: 992px) {
+  .content-layout {
+    flex-direction: column;
+  }
+
+  .tag-sidebar {
+    position: static;
+    width: 100%;
+    max-width: none;
+  }
+}
+
 @media (max-width: 1024px) {
   .mcp-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -334,6 +438,24 @@ const handleMcpClick = (mcp) => {
 }
 
 @media (max-width: 768px) {
+  .market-header {
+    flex-direction: column;
+  }
+
+  .header-controls {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .search-input {
+    flex: 1;
+    width: 100%;
+  }
+
+  .sort-select {
+    width: 100%;
+  }
+
   .page-title {
     font-size: 28px;
   }
@@ -342,16 +464,8 @@ const handleMcpClick = (mcp) => {
     grid-template-columns: 1fr;
   }
 
-  .filter-row {
-    flex-direction: column;
-  }
-
-  .filter-select {
-    width: 100%;
-  }
-
-  .search-input {
-    max-width: 100%;
+  .tag-sidebar {
+    display: none;
   }
 }
 </style>

@@ -125,6 +125,7 @@ func (s *mcpService) GetMcpService(id uint) (models.McpService, error) {
 	if err := db.GetDB().Preload("Tags").First(&mcp, id).Error; err != nil {
 		return models.McpService{}, err
 	}
+
 	return mcp, nil
 }
 
