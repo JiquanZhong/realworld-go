@@ -2,43 +2,68 @@
   <div class="mcp-market">
     <div class="market-header">
       <div class="header-left">
-        <h1 class="page-title">探索MCP</h1>
+        <div class="title-row">
+          <h1 class="page-title">探索下一代 MCP 服务</h1>
+        </div>
         <p class="page-subtitle">聚合优质MCP资源，拓展模型智能边界</p>
       </div>
+    </div>
 
-      <div class="header-controls">
-        <el-input
-          v-model="searchInput"
-          placeholder="搜索"
-          class="search-input"
-          clearable
-        >
-          <template #prefix>
-            <el-icon><Search /></el-icon>
-          </template>
-        </el-input>
+    <div class="hero-section">
+      <div v-for="card in heroCards" :key="card.title" class="hero-card" :style="{ background: card.background }">
+        <div class="hero-tag" :style="{ background: card.tagBg }">{{ card.tag }}</div>
+        <h3>{{ card.title }}</h3>
+        <p>{{ card.description }}</p>
+        <div class="hero-meta">
+          <span>{{ card.meta }}</span>
+          <el-icon><ArrowRight /></el-icon>
+        </div>
+      </div>
+    </div>
 
-        <el-select
-          v-model="sortOption"
-          placeholder="排序"
-          class="sort-select"
-          @change="handleSortChange"
-        >
-          <el-option label="安装量最多" value="install_count_desc" />
-          <el-option label="安装量最少" value="install_count_asc" />
-          <el-option label="评分最高" value="rating_avg_desc" />
-          <el-option label="评分最低" value="rating_avg_asc" />
-          <el-option label="最新发布" value="created_at_desc" />
-          <el-option label="最旧发布" value="created_at_asc" />
-        </el-select>
+    <div class="overview-row">
+      <div class="overview-text">
+        <p class="overview-label">MCP 服务目录</p>
+        <h2 class="overview-title">精选工具集，助力智能体扩展边界</h2>
+      </div>
+      <div class="overview-right">
+        <div class="header-controls">
+          <el-input
+            v-model="searchInput"
+            placeholder="搜索 MCP 服务"
+            class="search-input"
+            clearable
+          >
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-input>
+
+          <el-select
+            v-model="sortOption"
+            placeholder="排序"
+            class="sort-select"
+            @change="handleSortChange"
+          >
+            <el-option label="安装量最多" value="install_count_desc" />
+            <el-option label="安装量最少" value="install_count_asc" />
+            <el-option label="评分最高" value="rating_avg_desc" />
+            <el-option label="评分最低" value="rating_avg_asc" />
+            <el-option label="最新发布" value="created_at_desc" />
+            <el-option label="最旧发布" value="created_at_asc" />
+          </el-select>
+        </div>
       </div>
     </div>
 
     <div v-loading="mcpStore.loading" class="content-layout">
       <aside class="tag-sidebar">
         <div class="sidebar-header">
-          <h3>标签</h3>
-          <p>选择一个标签探索相关 MCP</p>
+          <div>
+            <p class="sidebar-eyebrow">MCP 服务</p>
+            <h3>标签导航</h3>
+          </div>
+          <span class="sidebar-count">{{ mcpStore.tags.length }} 个标签</span>
         </div>
         <div class="tag-list">
           <button
@@ -47,7 +72,7 @@
             type="button"
             @click="handleTagSelect(null)"
           >
-            全部
+            全部推荐
           </button>
           <button
             v-for="tag in mcpStore.tags"
@@ -57,7 +82,8 @@
             type="button"
             @click="handleTagSelect(tag.id)"
           >
-            {{ tag.name }}
+            <span>{{ tag.name }}</span>
+            <el-icon size="14"><ArrowRight /></el-icon>
           </button>
         </div>
       </aside>
@@ -98,7 +124,7 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMcpStore } from '@/stores/mcp'
 import { ElMessage } from 'element-plus'
-import { Search } from '@element-plus/icons-vue'
+import { Search, ArrowRight } from '@element-plus/icons-vue'
 import McpCard from '@/components/McpCard.vue'
 import PageFooter from '@/components/PageFooter.vue'
 
@@ -109,12 +135,46 @@ const searchInput = ref('')
 const selectedTag = ref(null)
 let searchTimeout = null
 
+const heroCards = [
+  {
+    title: 'MCP 实验场',
+    description: '探索最新 SOTA 模型扩展能力，轻松集成到你的智能体中。',
+    meta: '立即体验',
+    tag: 'New',
+    tagBg: 'rgba(147, 51, 234, 0.35)',
+    background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.35), rgba(217, 70, 239, 0.2))'
+  },
+  {
+    title: '精选智能工具',
+    description: '覆盖搜索、协同、创作等场景，快速查找可信赖的 MCP 服务。',
+    meta: '查看详情',
+    tag: 'Hot',
+    tagBg: 'rgba(248, 113, 113, 0.35)',
+    background: 'linear-gradient(135deg, rgba(248, 113, 113, 0.35), rgba(251, 191, 36, 0.2))'
+  },
+  {
+    title: '开发者实践',
+    description: '了解如何构建高质量 MCP，分享最佳实践与实现经验。',
+    meta: '教程速览',
+    tag: 'Guide',
+    tagBg: 'rgba(34, 197, 94, 0.35)',
+    background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.35), rgba(59, 130, 246, 0.2))'
+  }
+]
+
 const filteredMcpList = computed(() => {
   if (!selectedTag.value) return mcpStore.mcpList
   return mcpStore.mcpList.filter((mcp) =>
     (mcp.tags || []).some((tag) => tag.id === selectedTag.value)
   )
 })
+
+const formatStatValue = (value = 0) => {
+  if (value >= 1000) {
+    return (value / 1000).toFixed(1) + 'k+'
+  }
+  return value || 0
+}
 
 onMounted(() => {
   loadData()
@@ -171,7 +231,7 @@ const handleTagSelect = (tagId) => {
 
 <style scoped>
 .mcp-market {
-  max-width: 80vw;
+  max-width: 95vw;
   margin: 0 auto;
   padding-bottom: 40px;
 }
@@ -191,6 +251,13 @@ const handleTagSelect = (tagId) => {
   min-width: 260px;
 }
 
+.title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .header-controls {
   display: flex;
   gap: 12px;
@@ -201,8 +268,8 @@ const handleTagSelect = (tagId) => {
 }
 
 .page-title {
-  margin: 0 0 12px;
-  font-size: 36px;
+  margin: 4px 0 12px;
+  font-size: 38px;
   font-weight: 700;
   color: var(--mcp-text-primary);
   font-family: 'Space Grotesk', sans-serif;
@@ -240,7 +307,7 @@ const handleTagSelect = (tagId) => {
 }
 
 .search-input :deep(.el-input__inner::placeholder) {
-  color: var(--mcp-text-muted);
+  color: var(--mcp-text-secondary);
 }
 
 .search-input :deep(.el-input__prefix) {
@@ -284,8 +351,128 @@ const handleTagSelect = (tagId) => {
   color: var(--mcp-text-primary) !important;
 }
 
+.sort-select :deep(.el-input__inner::placeholder) {
+  color: var(--mcp-text-secondary) !important;
+}
+
 .sort-select :deep(.el-input__suffix) {
   color: var(--mcp-text-muted);
+}
+
+.sort-select :deep(.el-select__placeholder) {
+  color: var(--mcp-text-secondary) !important;
+}
+
+.hero-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  padding: 0 16px 16px;
+}
+
+.hero-card {
+  background: var(--mcp-dark-bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 140px;
+}
+
+.hero-card h3 {
+  margin: 0;
+  color: white;
+  font-size: 18px;
+}
+
+.hero-card p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+  flex: 1;
+}
+
+.hero-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: white;
+}
+
+.hero-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+}
+
+.overview-row {
+  padding: 12px 16px 32px;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: flex-end;
+}
+
+.overview-text {
+  flex: 1;
+  min-width: 280px;
+}
+
+.overview-right {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-end;
+  min-width: 320px;
+}
+
+.overview-label {
+  margin: 0;
+  color: var(--mcp-text-muted);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+.overview-title {
+  margin: 8px 0 0;
+  font-size: 24px;
+  color: var(--mcp-text-primary);
+}
+
+.stat-cards {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.stat-card {
+  background: var(--mcp-dark-bg-card);
+  border: 1px solid var(--mcp-border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  min-width: 140px;
+}
+
+.stat-value {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--mcp-text-primary);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--mcp-text-secondary);
 }
 
 .content-layout {
@@ -309,6 +496,10 @@ const handleTagSelect = (tagId) => {
 
 .sidebar-header {
   margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .sidebar-header h3 {
@@ -317,10 +508,26 @@ const handleTagSelect = (tagId) => {
   color: var(--mcp-text-primary);
 }
 
+.sidebar-eyebrow {
+  margin: 0;
+  color: var(--mcp-text-muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
 .sidebar-header p {
   margin: 0;
   color: var(--mcp-text-secondary);
   font-size: 13px;
+}
+
+.sidebar-count {
+  font-size: 12px;
+  color: var(--mcp-text-muted);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 8px;
+  border-radius: 999px;
 }
 
 .tag-list {
@@ -334,7 +541,9 @@ const handleTagSelect = (tagId) => {
   border: 1px solid var(--mcp-border);
   border-radius: var(--radius-sm);
   padding: 8px 12px;
-  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   color: var(--mcp-text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -440,6 +649,25 @@ const handleTagSelect = (tagId) => {
 @media (max-width: 768px) {
   .market-header {
     flex-direction: column;
+  }
+
+  .overview-right {
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .hero-section {
+    grid-template-columns: 1fr;
+  }
+
+  .overview-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .stat-cards {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .header-controls {

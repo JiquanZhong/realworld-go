@@ -184,7 +184,7 @@ onMounted(() => {
 }
 
 .page-container {
-  max-width: 80vw;
+  max-width: 95vw;
   margin: 0 auto;
   width: 100%;
   flex: 1;
