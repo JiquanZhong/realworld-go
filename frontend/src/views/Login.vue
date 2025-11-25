@@ -134,7 +134,7 @@ const goToRegister = () => {
 
 // 返回到 MCP 广场
 const goBack = () => {
-  router.push('/mcp-market')
+  router.push('/mcps')
 }
 </script>
 
@@ -172,6 +172,7 @@ const goBack = () => {
   max-width: 420px;
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  background: var(--mcp-dark-bg-elevated);
 }
 
 .card-header {
@@ -182,13 +183,13 @@ const goBack = () => {
   margin: 0 0 8px 0;
   font-size: 28px;
   font-weight: 600;
-  color: #303133;
+  color: white;
 }
 
 .subtitle {
   margin: 0;
   font-size: 14px;
-  color: #909399;
+  color: white;
 }
 
 .el-form {
@@ -211,7 +212,7 @@ const goBack = () => {
 }
 
 .tip {
-  color: #909399;
+  color: white;
   font-size: 14px;
   margin-right: 8px;
 }

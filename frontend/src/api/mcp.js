@@ -7,7 +7,7 @@ export const getMcpList = (params) => {
     method: 'get',
     params: {
       page: params.page || 1,
-      page_size: params.pageSize || 12,
+      page_size: params.pageSize || 20,
       by: params.sortBy || 'id',
       asc: params.asc !== false ? 'true' : 'false',
       search: params.search || ''

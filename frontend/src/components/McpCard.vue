@@ -1,50 +1,16 @@
 <template>
-  <el-card class="mcp-card" shadow="hover" @click="handleClick">
-    <div class="card-header">
-      <div class="icon-wrapper">
-        <img v-if="mcp.icon_url" :src="mcp.icon_url" :alt="mcp.name" class="mcp-icon" />
-        <el-icon v-else :size="48" color="#909399"><Box /></el-icon>
-      </div>
-      <div class="header-info">
-        <h3 class="mcp-name">{{ mcp.name }}</h3>
-        <div class="mcp-category">
-          <el-tag size="small" type="info">{{ mcp.category || '未分类' }}</el-tag>
-        </div>
+  <div class="mcp-card" @click="handleClick">
+    <div class="card-image-wrapper">
+      <img v-if="mcp.icon_url" :src="mcp.icon_url" :alt="mcp.name" class="card-image" />
+      <div v-else class="card-image-placeholder">
+        <el-icon :size="64" color="var(--mcp-accent-cyan)"><Box /></el-icon>
       </div>
     </div>
-
-    <div class="card-body">
+    <div class="card-content">
+      <h3 class="mcp-name">{{ mcp.name }}</h3>
       <p class="mcp-description">{{ mcp.description || '暂无描述' }}</p>
     </div>
-
-    <div class="card-footer">
-      <div class="tags-section">
-        <el-tag
-          v-for="tag in displayTags"
-          :key="tag.id"
-          size="small"
-          effect="plain"
-          class="tag-item"
-        >
-          {{ tag.name }}
-        </el-tag>
-        <span v-if="mcp.tags && mcp.tags.length > 3" class="more-tags">
-          +{{ mcp.tags.length - 3 }}
-        </span>
-      </div>
-
-      <div class="stats-section">
-        <div class="stat-item">
-          <el-icon><Download /></el-icon>
-          <span>{{ formatNumber(mcp.install_count || 0) }}</span>
-        </div>
-        <div class="stat-item">
-          <el-icon><Star /></el-icon>
-          <span>{{ mcp.rating_avg ? mcp.rating_avg.toFixed(1) : '0.0' }}</span>
-        </div>
-      </div>
-    </div>
-  </el-card>
+  </div>
 </template>
 
 <script setup>
@@ -83,110 +49,70 @@ const handleClick = () => {
   height: 100%;
   display: flex;
   flex-direction: column;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--mcp-dark-bg-card);
+  border: 1px solid var(--mcp-border);
 }
 
 .mcp-card:hover {
   transform: translateY(-4px);
+  border-color: var(--mcp-accent-cyan);
+  box-shadow: 0 8px 24px rgba(0, 212, 255, 0.15);
 }
 
-.card-header {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.icon-wrapper {
-  flex-shrink: 0;
-  width: 64px;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f5f7fa;
-  border-radius: 8px;
+.card-image-wrapper {
+  width: 100%;
+  height: 160px;
   overflow: hidden;
+  background: linear-gradient(135deg, #1a2536 0%, #0d1117 100%);
+  position: relative;
 }
 
-.mcp-icon {
+.card-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.header-info {
+.card-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+}
+
+.card-content {
   flex: 1;
-  min-width: 0;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .mcp-name {
-  margin: 0 0 8px 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #303133;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--mcp-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.mcp-category {
-  display: flex;
-  align-items: center;
-}
-
-.card-body {
-  flex: 1;
-  margin-bottom: 16px;
+  font-family: 'Space Grotesk', sans-serif;
 }
 
 .mcp-description {
   margin: 0;
-  font-size: 14px;
-  color: #606266;
-  line-height: 1.6;
+  font-size: 12px;
+  color: var(--mcp-text-secondary);
+  line-height: 1.4;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.card-footer {
-  border-top: 1px solid #e4e7ed;
-  padding-top: 12px;
-}
-
-.tags-section {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 12px;
-  min-height: 24px;
-}
-
-.tag-item {
-  font-size: 12px;
-}
-
-.more-tags {
-  font-size: 12px;
-  color: #909399;
-}
-
-.stats-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: #909399;
-  font-size: 14px;
-}
-
-.stat-item .el-icon {
-  font-size: 16px;
+  flex: 1;
 }
 </style>

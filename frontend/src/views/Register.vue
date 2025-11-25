@@ -133,7 +133,7 @@ const rules = computed(() => ({
 
 // 返回到 MCP 广场
 const goBack = () => {
-  router.push('/mcp-market')
+  router.push('/mcps')
 }
 
 // 跳转到登录页
@@ -195,7 +195,6 @@ const handleRegister = async () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
   padding: 20px;
 }
 
@@ -204,6 +203,7 @@ const handleRegister = async () => {
   max-width: 420px;
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  background: var(--mcp-dark-bg-elevated);
 }
 
 .back-button {
@@ -230,13 +230,13 @@ const handleRegister = async () => {
   margin: 0 0 8px 0;
   font-size: 28px;
   font-weight: 600;
-  color: #303133;
+  color: white;
 }
 
 .subtitle {
   margin: 0;
   font-size: 14px;
-  color: #909399;
+  color: white;
 }
 
 .el-form {
@@ -259,7 +259,7 @@ const handleRegister = async () => {
 }
 
 .tip {
-  color: #909399;
+  color: white;
   font-size: 14px;
   margin-right: 8px;
 }

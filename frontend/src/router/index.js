@@ -4,7 +4,7 @@ import { useUserStore } from '@/stores/user'
 const routes = [
   {
     path: '/',
-    redirect: '/mcp-market'
+    redirect: '/mcps'
   },
   {
     path: '/login',
@@ -17,9 +17,24 @@ const routes = [
     component: () => import('@/views/Register.vue')
   },
   {
-    path: '/mcp-market',
+    path: '/mcps',
     name: 'McpMarket',
     component: () => import('@/views/McpMarket.vue')
+  },
+  {
+    path: '/mcps/:id',
+    name: 'McpDetail',
+    component: () => import('@/views/McpDetail.vue')
+  },
+  {
+    path: '/docs',
+    name: 'Docs',
+    component: () => import('@/views/Docs.vue')
+  },
+  {
+    path: '/community',
+    name: 'Community',
+    component: () => import('@/views/Community.vue')
   }
 ]
 

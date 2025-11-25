@@ -27,3 +27,63 @@ a,
     background-color: hsla(160, 100%, 37%, 0.2);
   }
 }
+
+/* Element Plus 深色主题覆盖 */
+.el-select-dropdown {
+  background: var(--mcp-dark-bg-card) !important;
+  border: 1px solid var(--mcp-border) !important;
+}
+
+.el-select-dropdown__item {
+  color: var(--mcp-text-secondary) !important;
+}
+
+.el-select-dropdown__item:hover,
+.el-select-dropdown__item.is-hovering {
+  background: var(--mcp-dark-bg-card-hover) !important;
+  color: var(--mcp-text-primary) !important;
+}
+
+.el-select-dropdown__item.is-selected {
+  color: var(--mcp-accent-cyan) !important;
+  background: var(--mcp-dark-bg-card-hover) !important;
+}
+
+.el-popper {
+  background: var(--mcp-dark-bg-card) !important;
+  border: 1px solid var(--mcp-border) !important;
+}
+
+/* 下拉菜单箭头 */
+.el-popper__arrow::before {
+  background: var(--mcp-dark-bg-card) !important;
+  border: 1px solid var(--mcp-border) !important;
+}
+
+/* Empty 组件 */
+.el-empty__description p {
+  color: var(--mcp-text-secondary) !important;
+}
+
+/* Loading */
+.el-loading-mask {
+  background-color: rgba(13, 17, 23, 0.8) !important;
+}
+
+/* Message Box / Dialog */
+.el-message-box {
+  background: var(--mcp-dark-bg-card) !important;
+  border: 1px solid var(--mcp-border) !important;
+}
+
+.el-message-box__title {
+  color: var(--mcp-text-primary) !important;
+}
+
+.el-message-box__content {
+  color: var(--mcp-text-secondary) !important;
+}
+
+.el-overlay {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+}

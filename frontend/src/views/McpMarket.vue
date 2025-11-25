@@ -1,44 +1,64 @@
 <template>
   <div class="mcp-market">
     <div class="market-header">
-      <h2>探索 MCP 服务</h2>
-      <p class="subtitle">发现和使用强大的 Model Context Protocol 服务</p>
+      <h1 class="page-title">探索MCP</h1>
+      <p class="page-subtitle">聚合优质MCP资源，拓展模型智能边界</p>
+    </div>
+
+    <div class="search-bar">
+      <el-input
+        v-model="searchInput"
+        placeholder="搜索"
+        class="search-input"
+        clearable
+      >
+        <template #prefix>
+          <el-icon><Search /></el-icon>
+        </template>
+      </el-input>
     </div>
 
     <div class="filter-section">
-      <div class="filter-left">
+      <div class="filter-row">
+        <el-select v-model="category" placeholder="分类" class="filter-select">
+          <el-option label="所有分类" value="" />
+          <el-option label="生产力" value="productivity" />
+          <el-option label="分析" value="analytics" />
+          <el-option label="沟通" value="communication" />
+        </el-select>
+
+        <el-select v-model="rating" placeholder="评分" class="filter-select">
+          <el-option label="所有评分" value="" />
+          <el-option label="5 星" value="5" />
+          <el-option label="4+星" value="4" />
+          <el-option label="3+星" value="3" />
+        </el-select>
+
+        <el-select v-model="price" placeholder="价格" class="filter-select">
+          <el-option label="所有价格" value="" />
+          <el-option label="免费" value="free" />
+          <el-option label="Paid" value="paid" />
+        </el-select>
+
         <el-select
           v-model="sortOption"
-          placeholder="排序方式"
-          style="width: 180px"
+          placeholder="Sort by"
+          class="filter-select"
           @change="handleSortChange"
         >
           <el-option label="安装量最多" value="install_count_desc" />
           <el-option label="安装量最少" value="install_count_asc" />
           <el-option label="评分最高" value="rating_avg_desc" />
           <el-option label="评分最低" value="rating_avg_asc" />
-          <el-option label="最新创建" value="created_at_desc" />
-          <el-option label="最早创建" value="created_at_asc" />
+          <el-option label="最新发布" value="created_at_desc" />
+          <el-option label="最旧发布" value="created_at_asc" />
         </el-select>
-
-        <el-button @click="handleRefresh" :icon="Refresh">刷新</el-button>
-      </div>
-
-      <div class="filter-right">
-        <span v-if="mcpStore.searchKeyword" class="search-info">
-          搜索 "{{ mcpStore.searchKeyword }}"
-        </span>
-        <span class="result-count">共 {{ mcpStore.total }} 个服务</span>
       </div>
     </div>
 
-    <el-divider />
-
     <div v-loading="mcpStore.loading" class="content-section">
       <div v-if="mcpStore.mcpList.length === 0 && !mcpStore.loading" class="empty-state">
-        <el-empty description="暂无 MCP 服务">
-          <el-button type="primary">提交服务</el-button>
-        </el-empty>
+        <el-empty description="No MCPs found" />
       </div>
 
       <div v-else class="mcp-grid">
@@ -56,112 +76,54 @@
         v-model:current-page="mcpStore.currentPage"
         :page-size="mcpStore.pageSize"
         :total="mcpStore.total"
-        layout="prev, pager, next, jumper"
+        layout="prev, pager, next"
+        background
         @current-change="handlePageChange"
       />
     </div>
 
-    <!-- MCP 详情对话框 -->
-    <el-dialog
-      v-model="detailDialogVisible"
-      :title="selectedMcp?.name"
-      width="800px"
-      @close="handleDialogClose"
-    >
-      <div v-if="selectedMcp" class="mcp-detail">
-        <div class="detail-header">
-          <div class="icon-wrapper-large">
-            <img
-              v-if="selectedMcp.icon_url"
-              :src="selectedMcp.icon_url"
-              :alt="selectedMcp.name"
-              class="mcp-icon-large"
-            />
-            <el-icon v-else :size="80" color="#909399"><Box /></el-icon>
-          </div>
-          <div class="detail-info">
-            <h2>{{ selectedMcp.name }}</h2>
-            <el-tag type="info">{{ selectedMcp.category || '未分类' }}</el-tag>
-            <div class="detail-stats">
-              <span><el-icon><Download /></el-icon> {{ selectedMcp.install_count || 0 }} 次安装</span>
-              <span><el-icon><Star /></el-icon> {{ selectedMcp.rating_avg ? selectedMcp.rating_avg.toFixed(1) : '0.0' }} 评分</span>
-            </div>
-          </div>
-        </div>
-
-        <el-divider />
-
-        <div class="detail-section">
-          <h3>描述</h3>
-          <p>{{ selectedMcp.description || '暂无描述' }}</p>
-        </div>
-
-        <div v-if="selectedMcp.endpoint" class="detail-section">
-          <h3>服务端点</h3>
-          <el-link :href="selectedMcp.endpoint" target="_blank" type="primary">
-            {{ selectedMcp.endpoint }}
-          </el-link>
-        </div>
-
-        <div v-if="selectedMcp.tags && selectedMcp.tags.length > 0" class="detail-section">
-          <h3>标签</h3>
-          <div class="tags-list">
-            <el-tag
-              v-for="tag in selectedMcp.tags"
-              :key="tag.id"
-              effect="plain"
-              class="tag-item"
-            >
-              {{ tag.name }}
-            </el-tag>
-          </div>
-        </div>
-
-        <div v-if="selectedMcp.json_schema" class="detail-section">
-          <h3>JSON Schema</h3>
-          <el-input
-            type="textarea"
-            :value="selectedMcp.json_schema"
-            :rows="8"
-            readonly
-          />
-        </div>
-      </div>
-
-      <template #footer>
-        <el-button @click="detailDialogVisible = false">关闭</el-button>
-        <el-button type="primary" @click="handleInstall">安装</el-button>
-      </template>
-    </el-dialog>
+    <PageFooter />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, shallowRef } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useMcpStore } from '@/stores/mcp'
 import { ElMessage } from 'element-plus'
-import { Refresh } from '@element-plus/icons-vue'
+import { Search } from '@element-plus/icons-vue'
 import McpCard from '@/components/McpCard.vue'
+import PageFooter from '@/components/PageFooter.vue'
 
+const router = useRouter()
 const mcpStore = useMcpStore()
 const sortOption = ref('install_count_desc')
-const detailDialogVisible = ref(false)
-const selectedMcp = shallowRef(null)
+const searchInput = ref('')
+const category = ref('')
+const rating = ref('')
+const price = ref('')
+let searchTimeout = null
 
 onMounted(() => {
   loadData()
+})
+
+watch(searchInput, (newValue) => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    mcpStore.search(newValue)
+  }, 500)
 })
 
 const loadData = async () => {
   try {
     await mcpStore.fetchMcpList()
   } catch (error) {
-    ElMessage.error('加载 MCP 列表失败')
+    ElMessage.error('Failed to load MCP list')
   }
 }
 
 const handleSortChange = (value) => {
-  // Split by last underscore to get field and order
   const lastUnderscoreIndex = value.lastIndexOf('_')
   const field = value.substring(0, lastUnderscoreIndex)
   const order = value.substring(lastUnderscoreIndex + 1)
@@ -169,82 +131,137 @@ const handleSortChange = (value) => {
   mcpStore.changeSort(field, !isDesc)
 }
 
-const handleRefresh = () => {
-  loadData()
-}
-
 const handlePageChange = (page) => {
   mcpStore.changePage(page)
 }
 
 const handleMcpClick = (mcp) => {
-  selectedMcp.value = mcp
-  detailDialogVisible.value = true
-}
-
-const handleDialogClose = () => {
-  selectedMcp.value = null
-}
-
-const handleInstall = () => {
-  ElMessage.info('安装功能开发中...')
+  router.push(`/mcps/${mcp.id}`)
 }
 </script>
 
 <style scoped>
 .mcp-market {
-  max-width: 1400px;
+  max-width: 80vw;
   margin: 0 auto;
+  padding-bottom: 40px;
 }
 
 .market-header {
-  margin-bottom: 32px;
-}
-
-.market-header h2 {
-  margin: 0 0 8px 0;
-  font-size: 32px;
-  color: #303133;
-}
-
-.subtitle {
-  margin: 0;
-  font-size: 16px;
-  color: #909399;
-}
-
-.filter-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  padding: 20px 16px;
   margin-bottom: 24px;
 }
 
-.filter-left {
+.page-title {
+  margin: 0 0 12px;
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--mcp-text-primary);
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.page-subtitle {
+  margin: 0;
+  font-size: 16px;
+  color: var(--mcp-text-secondary);
+  line-height: 1.5;
+  max-width: 720px;
+}
+
+.search-bar {
+  padding: 0 16px;
+  margin-bottom: 20px;
+}
+
+.search-input {
+  max-width: 600px;
+}
+
+.search-input :deep(.el-input__wrapper) {
+  background: var(--mcp-dark-bg-card);
+  border: 1px solid var(--mcp-border);
+  box-shadow: none;
+}
+
+.search-input :deep(.el-input__wrapper:hover) {
+  border-color: var(--mcp-border-light);
+}
+
+.search-input :deep(.el-input__wrapper.is-focus) {
+  border-color: var(--mcp-accent-cyan);
+}
+
+.search-input :deep(.el-input__inner) {
+  color: var(--mcp-text-primary);
+}
+
+.search-input :deep(.el-input__inner::placeholder) {
+  color: var(--mcp-text-muted);
+}
+
+.search-input :deep(.el-input__prefix) {
+  color: var(--mcp-text-muted);
+}
+
+.filter-section {
+  padding: 0 16px;
+  margin-bottom: 32px;
+}
+
+.filter-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
-  align-items: center;
 }
 
-.filter-right {
-  display: flex;
-  gap: 12px;
-  align-items: center;
+.filter-select {
+  width: 160px;
+  color: red;
 }
 
-.search-info {
+.filter-select :deep(.el-select__wrapper) {
+  background-color: var(--mcp-dark-bg-card) !important;
+  color: white !important;
   font-size: 14px;
-  color: #606266;
-  font-weight: 500;
 }
 
-.result-count {
-  font-size: 14px;
-  color: #909399;
+.filter-select :deep(.is-hovering) {
+  background-color: var(--mcp-dark-bg-card) !important;
+}
+
+.filter-select :deep(.el-input__wrapper) {
+  background: var(--mcp-dark-bg-card) !important;
+  border: 1px solid var(--mcp-border);
+  box-shadow: none;
+}
+
+.filter-select :deep(.el-input__wrapper:hover) {
+  border-color: var(--mcp-border-light);
+}
+
+.filter-select :deep(.el-input__wrapper.is-focus) {
+  border-color: var(--mcp-accent-cyan);
+}
+
+.filter-select :deep(.el-input__inner) {
+  color: var(--mcp-text-primary) !important;
+}
+
+.filter-select :deep(.el-input__inner::placeholder) {
+  color: var(--mcp-text-muted) !important;
+}
+
+.filter-select :deep(.el-select__placeholder) {
+  color: var(--mcp-text-muted) !important;
+}
+
+.filter-select :deep(.el-input__suffix) {
+  color: var(--mcp-text-muted);
 }
 
 .content-section {
   min-height: 400px;
+  padding: 0 16px;
 }
 
 .empty-state {
@@ -256,94 +273,85 @@ const handleInstall = () => {
 
 .mcp-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
   margin-bottom: 32px;
 }
 
 .pagination-section {
   display: flex;
   justify-content: center;
-  padding: 24px 0;
+  padding: 32px 16px;
 }
 
-.mcp-detail {
-  padding: 20px;
-}
-
-.detail-header {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-}
-
-.icon-wrapper-large {
-  flex-shrink: 0;
-  width: 120px;
-  height: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f5f7fa;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.mcp-icon-large {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.detail-info {
-  flex: 1;
-}
-
-.detail-info h2 {
-  margin: 0 0 12px 0;
-  font-size: 24px;
-  color: #303133;
-}
-
-.detail-stats {
-  display: flex;
-  gap: 20px;
-  margin-top: 12px;
-  font-size: 14px;
-  color: #606266;
-}
-
-.detail-stats span {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.detail-section {
-  margin-bottom: 24px;
-}
-
-.detail-section h3 {
-  margin: 0 0 12px 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #303133;
-}
-
-.detail-section p {
-  margin: 0;
-  font-size: 14px;
-  color: #606266;
-  line-height: 1.8;
-}
-
-.tags-list {
-  display: flex;
-  flex-wrap: wrap;
+.pagination-section :deep(.el-pagination) {
   gap: 8px;
 }
 
-.tag-item {
-  font-size: 13px;
+.pagination-section :deep(.el-pager li) {
+  background: var(--mcp-dark-bg-card) !important;
+  border-color: var(--mcp-border);
+  color: var(--mcp-text-secondary);
+}
+
+.pagination-section :deep(.el-pager li:hover) {
+  color: var(--mcp-accent-cyan) !important;
+  border-color: var(--mcp-accent-cyan);
+  background: var(--mcp-dark-bg-card-hover) !important;
+}
+
+.pagination-section :deep(.el-pager li.is-active) {
+  background: var(--mcp-accent-cyan) !important;
+  color: var(--mcp-dark-bg) !important;
+  border-color: var(--mcp-accent-cyan);
+}
+
+.pagination-section :deep(.btn-prev),
+.pagination-section :deep(.btn-next) {
+  background: var(--mcp-dark-bg-card) !important;
+  border-color: var(--mcp-border);
+  color: var(--mcp-text-secondary);
+}
+
+.pagination-section :deep(.btn-prev:hover),
+.pagination-section :deep(.btn-next:hover) {
+  color: var(--mcp-accent-cyan) !important;
+  border-color: var(--mcp-accent-cyan);
+  background: var(--mcp-dark-bg-card-hover) !important;
+}
+
+.pagination-section :deep(.btn-prev:disabled),
+.pagination-section :deep(.btn-next:disabled) {
+  background: var(--mcp-dark-bg-card) !important;
+  color: var(--mcp-text-disabled) !important;
+  border-color: var(--mcp-border);
+}
+
+@media (max-width: 1024px) {
+  .mcp-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .page-title {
+    font-size: 28px;
+  }
+
+  .mcp-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-row {
+    flex-direction: column;
+  }
+
+  .filter-select {
+    width: 100%;
+  }
+
+  .search-input {
+    max-width: 100%;
+  }
 }
 </style>

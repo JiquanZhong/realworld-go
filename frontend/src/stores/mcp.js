@@ -11,7 +11,7 @@ export const useMcpStore = defineStore('mcp', () => {
 
   // 当前筛选条件
   const currentPage = ref(1)
-  const pageSize = ref(12)
+  const pageSize = ref(20)
   const sortBy = ref('install_count')
   const sortAsc = ref(false)
   const selectedCategory = ref('')
