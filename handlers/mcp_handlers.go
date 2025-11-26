@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/JiquanZhong/realworld-go/services"
 	"github.com/JiquanZhong/realworld-go/utils"
@@ -19,6 +20,7 @@ import (
 // @Param page_size query int false "每页数量" default(10)
 // @Param by query string false "排序字段" default(id)
 // @Param asc query bool false "是否升序" default(true)
+// @Param tags query string false "标签 ID 列表，逗号分隔"
 // @Param search query string false "搜索关键词（匹配名称、描述、分类）"
 // @Success 200 {object} utils.Response "返回分页结果: total, page, list([]models.McpResponse)"
 // @Failure 500 {object} utils.Response "服务器内部错误"
@@ -32,7 +34,21 @@ func GetMcpServices(c *gin.Context) {
 		Asc: c.DefaultQuery("asc", "true") == "true",
 	}
 
-	pagination, err := services.Services().Mcp.ListMcpServices(uint(page), uint(pageSize), listOptions, searchKeyword)
+	var tagIds []uint
+	if tagsParam := c.Query("tags"); tagsParam != "" {
+		tagsStrs := strings.Split(tagsParam, ",")
+		for _, tagStr := range tagsStrs {
+			tagId, err := strconv.Atoi(tagStr)
+			if err == nil {
+				tagIds = append(tagIds, uint(tagId))
+			} else {
+				utils.Error(c, http.StatusBadRequest, "invalid tag id: "+tagStr)
+				return
+			}
+		}
+	}
+
+	pagination, err := services.Services().Mcp.ListMcpServices(uint(page), uint(pageSize), listOptions, tagIds, searchKeyword)
 
 	if err != nil {
 		utils.Error(c, http.StatusInternalServerError, err.Error())
@@ -92,13 +108,13 @@ func GetMcpService(c *gin.Context) {
 		return
 	}
 
-	mcp, err := services.Services().Mcp.GetMcpService(uint(id))
+	mcpDetail, err := services.Services().Mcp.GetMcpService(uint(id))
 	if err != nil {
 		utils.Error(c, http.StatusNotFound, err.Error())
 		return
 	}
 
-	utils.Success(c, mcp.ToResponse())
+	utils.Success(c, mcpDetail)
 }
 
 // DeleteMcpService godoc

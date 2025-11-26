@@ -8,9 +8,9 @@ import (
 )
 
 type McpService interface {
-	ListMcpServices(page, pageSize uint, listOptions utils.ListOptions, searchKeyword string) (utils.Pagination, error)
+	ListMcpServices(page, pageSize uint, listOptions utils.ListOptions, tagIds []uint, searchKeyword string) (utils.Pagination, error)
 	RegisterMcpService(req RegisterMcpServiceRequest) (models.McpService, error)
-	GetMcpService(id uint) (models.McpService, error)
+	GetMcpService(id uint) (models.McpDetailResponse, error)
 	DeleteMcpService(id uint) error
 }
 
@@ -31,13 +31,19 @@ type RegisterMcpServiceRequest struct {
 	SubmitterID uint   `json:"submitter_id"`
 }
 
-func (s *mcpService) ListMcpServices(page, pageSize uint, listOptions utils.ListOptions, searchKeyword string) (utils.Pagination, error) {
+func (s *mcpService) ListMcpServices(page, pageSize uint, listOptions utils.ListOptions, tagIds []uint, searchKeyword string) (utils.Pagination, error) {
 
 	var mcpServices []models.McpService
 
 	offset := (page - 1) * pageSize
 
 	dbQuery := db.GetDB().Model(&models.McpService{})
+
+	if len(tagIds) > 0 {
+		dbQuery = dbQuery.Joins("JOIN mcp_service_tags ON mcp_service_tags.mcp_id = mcp_services.id").
+			Where("mcp_service_tags.tag_id IN ?", tagIds).
+			Group("mcp_services.id")
+	}
 
 	// 添加搜索关键词过滤
 	if searchKeyword != "" {
@@ -61,6 +67,11 @@ func (s *mcpService) ListMcpServices(page, pageSize uint, listOptions utils.List
 		searchPattern := "%" + searchKeyword + "%"
 		countQuery = countQuery.Where("name LIKE ? OR description LIKE ? OR category LIKE ?",
 			searchPattern, searchPattern, searchPattern)
+	}
+	if len(tagIds) > 0 {
+		countQuery = countQuery.Joins("JOIN mcp_service_tags ON mcp_service_tags.mcp_id = mcp_services.id").
+			Where("mcp_service_tags.tag_id IN ?", tagIds).
+			Group("mcp_services.id")
 	}
 	countQuery.Count(&total)
 
@@ -116,17 +127,30 @@ func (s *mcpService) RegisterMcpService(req RegisterMcpServiceRequest) (models.M
 		return models.McpService{}, err
 	}
 
-	return s.GetMcpService(mcp.ID)
-}
+	// return s.GetMcpService(mcp.ID)
 
-func (s *mcpService) GetMcpService(id uint) (models.McpService, error) {
-	var mcp models.McpService
-
-	if err := db.GetDB().Preload("Tags").First(&mcp, id).Error; err != nil {
+	if err := db.GetDB().Preload("Tags").First(&mcp, mcp.ID).Error; err != nil {
 		return models.McpService{}, err
 	}
 
 	return mcp, nil
+}
+
+func (s *mcpService) GetMcpService(id uint) (models.McpDetailResponse, error) {
+	var mcp models.McpService
+
+	if err := db.GetDB().Preload("Tags").First(&mcp, id).Error; err != nil {
+		return models.McpDetailResponse{}, err
+	}
+
+	var submitter models.User
+	if err := db.GetDB().First(&submitter, mcp.SubmitterID).Error; err != nil {
+		return models.McpDetailResponse{}, err
+	}
+
+	mcpDetail := mcp.ToDetailResponseWithDetail()
+	mcpDetail.SubmitterName = submitter.Name
+	return mcpDetail, nil
 }
 
 func (s *mcpService) DeleteMcpService(id uint) error {

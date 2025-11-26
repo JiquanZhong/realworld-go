@@ -89,13 +89,13 @@
       </aside>
 
       <div class="market-content">
-        <div v-if="filteredMcpList.length === 0 && !mcpStore.loading" class="empty-state">
+        <div v-if="mcpStore.mcpList.length === 0 && !mcpStore.loading" class="empty-state">
           <el-empty description="没找到符合条件的MCP" />
         </div>
 
         <div v-else class="mcp-grid">
           <mcp-card
-            v-for="mcp in filteredMcpList"
+            v-for="mcp in mcpStore.mcpList"
             :key="mcp.id"
             :mcp="mcp"
             @click="handleMcpClick"
@@ -120,7 +120,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMcpStore } from '@/stores/mcp'
 import { ElMessage } from 'element-plus'
@@ -161,13 +161,6 @@ const heroCards = [
     background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.35), rgba(59, 130, 246, 0.2))'
   }
 ]
-
-const filteredMcpList = computed(() => {
-  if (!selectedTag.value) return mcpStore.mcpList
-  return mcpStore.mcpList.filter((mcp) =>
-    (mcp.tags || []).some((tag) => tag.id === selectedTag.value)
-  )
-})
 
 const formatStatValue = (value = 0) => {
   if (value >= 1000) {
@@ -223,9 +216,11 @@ const handleMcpClick = (mcp) => {
 const handleTagSelect = (tagId) => {
   if (selectedTag.value === tagId) {
     selectedTag.value = null
+    mcpStore.changeTags([])
     return
   }
   selectedTag.value = tagId
+  mcpStore.changeTags([tagId])
 }
 </script>
 

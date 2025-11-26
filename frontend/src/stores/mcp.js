@@ -27,7 +27,8 @@ export const useMcpStore = defineStore('mcp', () => {
         pageSize: pageSize.value,
         sortBy: sortBy.value,
         asc: sortAsc.value,
-        search: searchKeyword.value
+        search: searchKeyword.value,
+        tags: selectedTags.value
       })
       mcpList.value = data.list || []
       total.value = data.total || 0
@@ -61,6 +62,13 @@ export const useMcpStore = defineStore('mcp', () => {
   const changeSort = (field, asc = false) => {
     sortBy.value = field
     sortAsc.value = asc
+    currentPage.value = 1
+    fetchMcpList()
+  }
+
+  // 切换标签筛选
+  const changeTags = (tags = []) => {
+    selectedTags.value = tags
     currentPage.value = 1
     fetchMcpList()
   }
@@ -102,6 +110,7 @@ export const useMcpStore = defineStore('mcp', () => {
     fetchTags,
     changePage,
     changeSort,
+    changeTags,
     search,
     resetFilters
   }

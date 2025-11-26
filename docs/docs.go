@@ -206,7 +206,7 @@ const docTemplate = `{
         },
         "/mcps": {
             "get": {
-                "description": "分页获取 MCP 服务列表",
+                "description": "分页获取 MCP 服务列表，支持关键词搜索",
                 "consumes": [
                     "application/json"
                 ],
@@ -244,6 +244,18 @@ const docTemplate = `{
                         "default": true,
                         "description": "是否升序",
                         "name": "asc",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "标签 ID 列表，逗号分隔",
+                        "name": "tags",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "搜索关键词（匹配名称、描述、分类）",
+                        "name": "search",
                         "in": "query"
                     }
                 ],
@@ -838,6 +850,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "email": {
+                    "type": "string"
+                },
+                "icon_url": {
                     "type": "string"
                 },
                 "id": {

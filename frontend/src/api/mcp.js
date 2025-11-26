@@ -2,6 +2,7 @@ import request from './request'
 
 // 获取 MCP 服务列表（分页）
 export const getMcpList = (params) => {
+  const tags = Array.isArray(params.tags) ? params.tags.join(',') : params.tags
   return request({
     url: '/mcps',
     method: 'get',
@@ -10,7 +11,8 @@ export const getMcpList = (params) => {
       page_size: params.pageSize || 20,
       by: params.sortBy || 'id',
       asc: params.asc !== false ? 'true' : 'false',
-      search: params.search || ''
+      search: params.search || '',
+      tags: tags || ''
     }
   })
 }
