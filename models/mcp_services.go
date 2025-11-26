@@ -37,6 +37,7 @@ type McpDetailResponse struct {
 	InstallCount  uint      `json:"install_count"`
 	RatingAvg     float32   `json:"rating_avg"`
 	Detail        string    `json:"detail"`
+	FavoriteCount uint      `json:"favorite_count"`
 	SubmitterID   uint      `json:"submitter_id"`
 	SubmitterName string    `json:"submitter_name"`
 	CreatedAt     time.Time `json:"created_at"`

@@ -1,18 +1,20 @@
 package services
 
 type Registry struct {
-	User   UserService
-	Mcp    McpService
-	McpTag McpTagService
+	User        UserService
+	Mcp         McpService
+	McpTag      McpTagService
+	McpFavorite McpFavoriteService
 }
 
 var registry *Registry
 
 func initServices() {
 	registry = &Registry{
-		User:   NewUserService(),
-		Mcp:    NewMcpService(),
-		McpTag: NewMcpTagService(),
+		User:        NewUserService(),
+		Mcp:         NewMcpService(),
+		McpTag:      NewMcpTagService(),
+		McpFavorite: NewMcpFavoriteService(),
 	}
 }
 

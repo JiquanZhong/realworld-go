@@ -148,7 +148,13 @@ func (s *mcpService) GetMcpService(id uint) (models.McpDetailResponse, error) {
 		return models.McpDetailResponse{}, err
 	}
 
+	favoriteCount, err := Services().McpFavorite.GetFavoriteNum(id)
+	if err != nil {
+		return models.McpDetailResponse{}, err
+	}
+
 	mcpDetail := mcp.ToDetailResponseWithDetail()
+	mcpDetail.FavoriteCount = favoriteCount
 	mcpDetail.SubmitterName = submitter.Name
 	return mcpDetail, nil
 }

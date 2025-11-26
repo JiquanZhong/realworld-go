@@ -358,6 +358,71 @@ paths:
       summary: 获取 MCP 服务详情
       tags:
       - mcps
+  /mcps/{id}/favorite:
+    delete:
+      consumes:
+      - application/json
+      description: 用户取消对指定 MCP 服务的收藏
+      parameters:
+      - description: Mcp 服务 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 取消收藏成功
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "400":
+          description: 无效的 MCP 服务 ID
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 取消 MCP 服务收藏
+      tags:
+      - mcps
+    post:
+      consumes:
+      - application/json
+      description: 用户为指定的 MCP 服务添加收藏
+      parameters:
+      - description: Mcp 服务 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 收藏成功
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "400":
+          description: 无效的 MCP 服务 ID
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 为 MCP 服务添加收藏
+      tags:
+      - mcps
   /users:
     get:
       consumes:
