@@ -16,25 +16,40 @@
         </div>
         <section class="hero-card">
           <div class="hero-main">
-            <div class="title-row">
-              <div class="hero-icon" :style="{ background: iconBg }">
-                <img v-if="mcp.icon_url" :src="mcp.icon_url" :alt="mcp.name" />
-                <span v-else>{{ initials }}</span>
-              </div>
-              <div>
-                <p class="eyebrow">MCP 服务 · {{ formattedCreatedAt }}</p>
-                <div class="name-row">
-                  <h1 class="hero-title">{{ mcp.name }}</h1>
-                  <div class="name-chips">
-                    <span class="chip primary">MCP</span>
-                    <span v-if="mcp.category" class="chip">{{ mcp.category }}</span>
-                    <span v-for="tag in mcp.tags" :key="tag.id" class="chip subtle">#{{ tag.name }}</span>
-                  </div>
+            <div class="hero-header">
+              <div class="title-row">
+                <div class="hero-icon" :style="{ background: iconBg }">
+                  <img v-if="mcp.icon_url" :src="mcp.icon_url" :alt="mcp.name" />
+                  <span v-else>{{ initials }}</span>
                 </div>
-                <p class="hero-desc">
-                  {{ mcp.description || defaultDescription }}
-                </p>
+                <div>
+                  <p class="eyebrow">MCP 服务 · {{ formattedCreatedAt }}</p>
+                  <div class="name-row">
+                    <h1 class="hero-title">{{ mcp.name }}</h1>
+                    <div class="name-chips">
+                      <span class="chip primary">MCP</span>
+                      <span v-if="mcp.category" class="chip">{{ mcp.category }}</span>
+                      <span v-for="tag in mcp.tags" :key="tag.id" class="chip subtle">#{{ tag.name }}</span>
+                    </div>
+                  </div>
+                  <p class="hero-desc">
+                    {{ mcp.description || defaultDescription }}
+                  </p>
+                </div>
               </div>
+              <el-tooltip :content="isFavorited ? '取消收藏' : '收藏'" placement="top">
+                <el-button
+                  round
+                  plain
+                  class="favorite-btn"
+                  :loading="favoriteLoading"
+                  @click="handleToggleFavorite"
+                >
+                  <el-icon v-if="isFavorited"><StarFilled /></el-icon>
+                  <el-icon v-else><Star /></el-icon>
+                  <span class="favorite-text">{{ favoriteCount }}</span>
+                </el-button>
+              </el-tooltip>
             </div>
 
             <div class="meta-grid">
@@ -91,16 +106,33 @@
         </section>
 
         <section ref="detailSectionRef" class="doc-section">
-          <div class="section-header">
-            <div>
-              <p class="section-eyebrow">服务详情</p>
-              <h2 class="section-title">MCP {{ mcp.name }} 服务</h2>
-              <p class="section-desc">
-                {{ mcp.description || defaultDescription }}
-              </p>
+          <div class="section-header tabs-header">
+            <div class="detail-tabs">
+              <button
+                type="button"
+                class="detail-tab"
+                :class="{ active: activeDetailTab === 'detail' }"
+                @click="activeDetailTab = 'detail'"
+              >
+                服务详情
+              </button>
+              <button
+                type="button"
+                class="detail-tab"
+                :class="{ active: activeDetailTab === 'comments' }"
+                @click="activeDetailTab = 'comments'"
+              >
+                交流反馈
+              </button>
             </div>
           </div>
-          <div class="markdown-body" v-html="renderedDetail" />
+
+          <div v-if="activeDetailTab === 'detail'">
+            <div class="markdown-body" v-html="renderedDetail" />
+          </div>
+          <div v-else class="comment-placeholder">
+            <el-empty description="交流反馈功能即将上线，敬请期待" />
+          </div>
         </section>
       </template>
 
@@ -119,10 +151,10 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getMcpDetail } from '@/api/mcp'
+import { addMcpFavorite, getMcpDetail, removeMcpFavorite } from '@/api/mcp'
 import { ElMessage } from 'element-plus'
 import MarkdownIt from 'markdown-it'
-import { ArrowLeft, DocumentCopy, Link, Loading, Share, StarFilled, Timer, TrendCharts } from '@element-plus/icons-vue'
+import { ArrowLeft, DocumentCopy, Link, Loading, Share, Star, StarFilled, Timer, TrendCharts } from '@element-plus/icons-vue'
 import PageFooter from '@/components/PageFooter.vue'
 
 const route = useRoute()
@@ -130,6 +162,8 @@ const router = useRouter()
 const mcp = ref(null)
 const loading = ref(true)
 const detailSectionRef = ref(null)
+const favoriteLoading = ref(false)
+const activeDetailTab = ref('detail')
 
 const md = new MarkdownIt({
   html: true,
@@ -155,6 +189,9 @@ const formattedRating = computed(() => {
 
 const formattedCreatedAt = computed(() => formatDate(mcp.value?.created_at))
 const formattedUpdatedAt = computed(() => formatDate(mcp.value?.updated_at))
+
+const favoriteCount = computed(() => mcp.value?.favorite_count ?? 0)
+const isFavorited = computed(() => mcp.value?.is_favorited ?? false)
 
 const renderedDetail = computed(() => {
   const detail = mcp.value?.detail || mcp.value?.description || defaultDescription
@@ -205,6 +242,29 @@ const handleCopyEndpoint = () => {
 
 const handleShare = () => {
   copyToClipboard(window.location.href, '页面链接已复制')
+}
+
+const handleToggleFavorite = async () => {
+  if (!mcp.value?.id) return
+  try {
+    favoriteLoading.value = true
+    if (isFavorited.value) {
+      await removeMcpFavorite(mcp.value.id)
+      mcp.value.is_favorited = false
+      mcp.value.favorite_count = Math.max(0, favoriteCount.value - 1)
+      ElMessage.success('已取消收藏')
+    } else {
+      await addMcpFavorite(mcp.value.id)
+      mcp.value.is_favorited = true
+      mcp.value.favorite_count = favoriteCount.value + 1
+      ElMessage.success('已收藏')
+    }
+  } catch (error) {
+    console.error('收藏操作失败', error)
+    ElMessage.error('收藏操作失败，请重试')
+  } finally {
+    favoriteLoading.value = false
+  }
 }
 
 const handleGoMarket = () => {
@@ -282,7 +342,7 @@ watch(
   padding: 20px 24px;
   display: grid;
   grid-template-columns: 3fr 1.2fr;
-  gap: 18px;
+  gap: 16px;
   margin-bottom: 24px;
 }
 
@@ -295,6 +355,13 @@ watch(
 .title-row {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
+
+.hero-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   gap: 12px;
 }
 
@@ -453,6 +520,28 @@ watch(
   border-radius: 999px;
 }
 
+.favorite-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  color: var(--mcp-text-primary);
+  border-color: var(--mcp-border);
+  background: rgba(255, 255, 255, 0.03);
+  margin-top: 5px;
+}
+
+.favorite-btn:hover,
+.favorite-btn:focus {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--mcp-text-primary);
+  border-color: var(--mcp-border-light);
+}
+
+.favorite-text {
+  font-weight: 700;
+}
+
 .doc-section {
   background: var(--mcp-dark-bg-card);
   border: 1px solid var(--mcp-border);
@@ -467,11 +556,15 @@ watch(
   gap: 12px;
 }
 
+.tabs-header {
+  justify-content: flex-start;
+}
+
 .section-eyebrow {
-  margin: 0;
+  margin: 0 0 4px;
   color: var(--mcp-text-muted);
   font-size: 12px;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.3px;
 }
 
 .section-title {
@@ -538,6 +631,42 @@ watch(
   padding-left: 12px;
   margin: 0 0 12px;
   color: var(--mcp-text-secondary);
+}
+
+.detail-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--mcp-border);
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.detail-tab {
+  background: transparent;
+  color: var(--mcp-text-secondary);
+  border: 1px solid transparent;
+  padding: 6px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
+}
+
+.detail-tab:hover {
+  color: var(--mcp-text-primary);
+}
+
+.detail-tab.active {
+  background: var(--mcp-accent-cyan);
+  color: var(--mcp-dark-bg);
+  border-color: var(--mcp-accent-cyan);
+  box-shadow: 0 6px 20px rgba(0, 212, 255, 0.25);
+}
+
+.comment-placeholder {
+  padding: 16px 0;
 }
 
 @media (max-width: 1024px) {

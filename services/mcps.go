@@ -10,7 +10,7 @@ import (
 type McpService interface {
 	ListMcpServices(page, pageSize uint, listOptions utils.ListOptions, tagIds []uint, searchKeyword string) (utils.Pagination, error)
 	RegisterMcpService(req RegisterMcpServiceRequest) (models.McpService, error)
-	GetMcpService(id uint) (models.McpDetailResponse, error)
+	GetMcpService(id uint, userId uint) (models.McpDetailResponse, error)
 	DeleteMcpService(id uint) error
 }
 
@@ -136,7 +136,7 @@ func (s *mcpService) RegisterMcpService(req RegisterMcpServiceRequest) (models.M
 	return mcp, nil
 }
 
-func (s *mcpService) GetMcpService(id uint) (models.McpDetailResponse, error) {
+func (s *mcpService) GetMcpService(id uint, userId uint) (models.McpDetailResponse, error) {
 	var mcp models.McpService
 
 	if err := db.GetDB().Preload("Tags").First(&mcp, id).Error; err != nil {
@@ -156,6 +156,15 @@ func (s *mcpService) GetMcpService(id uint) (models.McpDetailResponse, error) {
 	mcpDetail := mcp.ToDetailResponseWithDetail()
 	mcpDetail.FavoriteCount = favoriteCount
 	mcpDetail.SubmitterName = submitter.Name
+
+	if userId != 0 {
+		isFavorited, err := Services().McpFavorite.IsFavorited(userId, id)
+		if err != nil {
+			return models.McpDetailResponse{}, err
+		}
+		mcpDetail.IsFavorited = isFavorited
+	}
+
 	return mcpDetail, nil
 }
 

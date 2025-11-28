@@ -25,6 +25,22 @@ export const getMcpDetail = (id) => {
   })
 }
 
+// 收藏 MCP 服务
+export const addMcpFavorite = (id) => {
+  return request({
+    url: `/mcps/${id}/favorite`,
+    method: 'post'
+  })
+}
+
+// 取消收藏 MCP 服务
+export const removeMcpFavorite = (id) => {
+  return request({
+    url: `/mcps/${id}/favorite`,
+    method: 'delete'
+  })
+}
+
 // 获取 MCP 标签列表
 export const getMcpTags = (params) => {
   return request({

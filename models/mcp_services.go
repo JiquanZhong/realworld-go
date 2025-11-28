@@ -40,6 +40,7 @@ type McpDetailResponse struct {
 	FavoriteCount uint      `json:"favorite_count"`
 	SubmitterID   uint      `json:"submitter_id"`
 	SubmitterName string    `json:"submitter_name"`
+	IsFavorited   bool      `json:"is_favorited"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 

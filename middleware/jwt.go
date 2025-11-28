@@ -11,6 +11,38 @@ import (
 
 var jwtSecret = []byte("your_secret_key")
 
+func OptionalJWTAuth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.Next()
+			return
+		}
+
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			c.Next()
+			return
+		}
+
+		tokenString := parts[1]
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			return jwtSecret, nil
+		})
+		if err != nil || !token.Valid {
+			c.Next()
+			return
+		}
+
+		if claims, ok := token.Claims.(jwt.MapClaims); ok {
+			c.Set("userID", claims["user_id"])
+			c.Set("role", claims["role"])
+		}
+
+		c.Next()
+	}
+}
+
 func JWTAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Implement JWT authentication logic here

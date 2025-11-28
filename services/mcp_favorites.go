@@ -9,6 +9,7 @@ type McpFavoriteService interface {
 	AddFavorite(id uint, userId uint) error
 	RemoveFavorite(id uint, userId uint) error
 	GetFavoriteNum(id uint) (uint, error)
+	IsFavorited(userId uint, id uint) (bool, error)
 }
 
 type mcpFavoriteService struct{}
@@ -62,4 +63,17 @@ func (s *mcpFavoriteService) GetFavoriteNum(id uint) (uint, error) {
 		return 0, err
 	}
 	return uint(count), nil
+}
+
+func (s *mcpFavoriteService) IsFavorited(userId uint, id uint) (bool, error) {
+	var count int64
+	err := db.GetDB().Model(&models.McpFavorite{}).
+		Where("user_id = ? AND mcp_service_id = ?", userId, id).
+		Count(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
 }

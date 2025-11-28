@@ -108,7 +108,9 @@ func GetMcpService(c *gin.Context) {
 		return
 	}
 
-	mcpDetail, err := services.Services().Mcp.GetMcpService(uint(id))
+	userId, _ := utils.GetUserID(c)
+
+	mcpDetail, err := services.Services().Mcp.GetMcpService(uint(id), userId)
 	if err != nil {
 		utils.Error(c, http.StatusNotFound, err.Error())
 		return

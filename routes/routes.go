@@ -32,7 +32,7 @@ func SetupRoutes(r *gin.Engine) {
 		mcps := v1.Group("/mcps")
 		{
 			mcps.GET("", handlers.GetMcpServices)
-			mcps.GET("/:id", handlers.GetMcpService)
+			mcps.GET("/:id", middleware.OptionalJWTAuth(), handlers.GetMcpService)
 		}
 
 		mcpTags := v1.Group("/mcp-tags")
