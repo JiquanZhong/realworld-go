@@ -1,6 +1,8 @@
 package services
 
 import (
+	"strings"
+
 	"github.com/JiquanZhong/realworld-go/db"
 	"github.com/JiquanZhong/realworld-go/models"
 	"github.com/JiquanZhong/realworld-go/utils"
@@ -47,8 +49,8 @@ func (s *mcpService) ListMcpServices(page, pageSize uint, listOptions utils.List
 
 	// 添加搜索关键词过滤
 	if searchKeyword != "" {
-		searchPattern := "%" + searchKeyword + "%"
-		dbQuery = dbQuery.Where("name LIKE ? OR description LIKE ? OR category LIKE ?",
+		searchPattern := "%" + strings.ToLower(searchKeyword) + "%"
+		dbQuery = dbQuery.Where("LOWER(name) LIKE ? OR LOWER(description) LIKE ? OR LOWER(category) LIKE ?",
 			searchPattern, searchPattern, searchPattern)
 	}
 
