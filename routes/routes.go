@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"github.com/JiquanZhong/realworld-go/handlers"
 	"github.com/JiquanZhong/realworld-go/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -21,59 +20,9 @@ func SetupRoutes(r *gin.Engine) {
 	}))
 
 	v1 := r.Group("/api/v1")
-	{
-
-		users := v1.Group("/users")
-		{
-			users.POST("/login", handlers.Login)
-			users.POST("", handlers.CreateUser)
-		}
-
-		mcps := v1.Group("/mcps")
-		{
-			mcps.GET("", handlers.GetMcpServices)
-			mcps.GET("/:id", middleware.OptionalJWTAuth(), handlers.GetMcpService)
-		}
-
-		mcpTags := v1.Group("/mcp-tags")
-		{
-			mcpTags.GET("", handlers.GetMcpTags)
-		}
-
-		// 需要认证的路由
-		protected := v1.Group("/")
-		protected.Use(middleware.JWTAuth())
-		{
-			users := protected.Group("/users")
-
-			users.GET("/:id", handlers.GetUser)
-			users.PUT("/:id", handlers.UpdateUser)
-
-			mcps := protected.Group("/mcps")
-			mcps.POST("", handlers.RegisterMcpService)
-			mcps.POST("/:id/favorite", handlers.AddMcpServiceFavorite)
-			mcps.DELETE("/:id/favorite", handlers.RemoveMcpServiceFavorite)
-		}
-
-		// 需要管理员权限的路由
-		admin := v1.Group("/")
-		admin.Use(middleware.JWTAuth(), middleware.RequireAdmin())
-		{
-			adminUsers := admin.Group("/users")
-
-			adminUsers.GET("", handlers.GetUsers)
-			adminUsers.DELETE("/:id", handlers.DeleteUser)
-			adminUsers.PUT("/:id/role", handlers.UpdateUserRole)
-
-			mcps := admin.Group("/mcps")
-			mcps.DELETE("/:id", handlers.DeleteMcpService)
-
-			mcpTags := admin.Group("/mcp-tags")
-			mcpTags.POST("", handlers.CreateMcpTag)
-			mcpTags.DELETE("/:id", handlers.DeleteMcpTag)
-			mcpTags.PUT("/:id", handlers.UpdateMcpTag)
-		}
-	}
+	RegisterUserRoutes(v1)
+	RegisterMcpRoutes(v1)
+	RegisterMcpTagRoutes(v1)
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
