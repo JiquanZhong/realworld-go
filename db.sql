@@ -139,3 +139,103 @@ create table public.mcp_tokens
 alter table public.mcp_tokens
     owner to postgres;
 
+
+-- ============================================
+-- 2. 板块表 forum_boards
+-- ============================================
+CREATE TABLE forum_boards (
+    id          BIGSERIAL PRIMARY KEY,
+    name        VARCHAR(100) NOT NULL,
+    slug        VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT,
+    sort_order  INT NOT NULL DEFAULT 0,
+    is_hidden   BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+-- ============================================
+-- 3. 主题状态枚举
+-- ============================================
+CREATE TYPE forum_topic_status AS ENUM ('normal', 'locked', 'archived');
+
+-- ============================================
+-- 4. 主题表 forum_topics
+-- ============================================
+CREATE TABLE forum_topics (
+    id                  BIGSERIAL PRIMARY KEY,
+    board_id            BIGINT NOT NULL REFERENCES forum_boards(id) ON DELETE CASCADE,
+    user_id             BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    title               VARCHAR(255) NOT NULL,
+    status              forum_topic_status NOT NULL DEFAULT 'normal',
+    view_count          INT NOT NULL DEFAULT 0,
+    reply_count         INT NOT NULL DEFAULT 0,
+    last_post_at        TIMESTAMPTZ,
+    last_post_user_id   BIGINT REFERENCES users(id),
+
+    is_deleted          BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_forum_topics_board_created_at
+    ON forum_topics(board_id, created_at DESC);
+
+CREATE INDEX idx_forum_topics_board_last_post_at
+    ON forum_topics(board_id, last_post_at DESC);
+
+-- ============================================
+-- 5. 帖子表 forum_posts（支持楼中楼）
+-- ============================================
+CREATE TABLE forum_posts (
+    id              BIGSERIAL PRIMARY KEY,
+    topic_id        BIGINT NOT NULL REFERENCES forum_topics(id) ON DELETE CASCADE,
+    user_id         BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+
+    -- 父楼层（楼中楼/引用楼层）
+    parent_post_id  BIGINT REFERENCES forum_posts(id) ON DELETE SET NULL,
+
+    content         TEXT NOT NULL,
+    is_deleted      BOOLEAN NOT NULL DEFAULT FALSE,
+    edit_count      INT NOT NULL DEFAULT 0,
+    last_edited_at  TIMESTAMPTZ,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_forum_posts_topic_created_at
+    ON forum_posts(topic_id, created_at ASC);
+
+CREATE INDEX idx_forum_posts_user_created_at
+    ON forum_posts(user_id, created_at DESC);
+
+-- ============================================
+-- 6. 点赞表 forum_post_likes
+-- ============================================
+CREATE TABLE forum_post_likes (
+    user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    post_id     BIGINT NOT NULL REFERENCES forum_posts(id) ON DELETE CASCADE,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (user_id, post_id)
+);
+
+CREATE INDEX idx_forum_post_likes_post_id
+    ON forum_post_likes(post_id);
+
+-- ============================================
+-- 7. 通知类型枚举（可选）
+-- ============================================
+CREATE TYPE forum_notification_type AS ENUM ('reply', 'mention', 'system');
+
+-- ============================================
+-- 8. 通知表 forum_notifications（可选）
+-- ============================================
+CREATE TABLE forum_notifications (
+    id              BIGSERIAL PRIMARY KEY,
+    user_id         BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type            forum_notification_type NOT NULL,
+    topic_id        BIGINT REFERENCES forum_topics(id) ON DELETE CASCADE,
+    post_id         BIGINT REFERENCES forum_posts(id) ON DELETE CASCADE,
+    is_read         BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_forum_notifications_user_is_read
+    ON forum_notifications(user_id, is_read, created_at DESC);
